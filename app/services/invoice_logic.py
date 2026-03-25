@@ -647,6 +647,7 @@ def make_product_key(seller_gstin: str, description: str) -> str:
 
 
 def update_inventory(metadata: dict, items: list):
+    LOW_STOCK_THRESHOLD_DEFAULT = 5
     seller_gstin = metadata.get("seller_gstin")
     invoice_number = metadata.get("invoice_number")
     invoice_date = metadata.get("invoice_date")
@@ -672,6 +673,7 @@ def update_inventory(metadata: dict, items: list):
                     "last_invoice_date": invoice_date,
                     "updated_at": datetime.utcnow(),
                 },
+                "$setOnInsert": {"low_stock_threshold": LOW_STOCK_THRESHOLD_DEFAULT},
                 "$inc": {"qty_in_stock": qty}
             },
             upsert=True

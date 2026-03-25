@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import Button from "./Button";
 import Card from "./Card";
 import Spinner from "./Spinner";
+import { useTranslation } from "react-i18next";
 
 export default function UploadCard({
   file,
@@ -12,6 +13,7 @@ export default function UploadCard({
 }) {
   const inputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
+  const { t } = useTranslation();
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -36,7 +38,7 @@ export default function UploadCard({
   }
 
   return (
-    <Card title="Upload Invoice PDF">
+    <Card title={t("upload_invoice_pdf")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div
           onDrop={onDrop}
@@ -62,9 +64,9 @@ export default function UploadCard({
             </svg>
           </div>
           <p className="text-sm font-medium text-slate-300">
-            {file ? file.name : "Drop PDF here or click to browse"}
+            {file ? file.name : t("drop_pdf_here_or_click_to_browse")}
           </p>
-          <p className="mt-1 text-xs text-slate-500">GST invoice PDF only</p>
+          <p className="mt-1 text-xs text-slate-500">{t("gst_invoice_pdf_only")}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -87,10 +89,10 @@ export default function UploadCard({
             {uploading ? (
               <>
                 <Spinner className="h-4 w-4" />
-                Uploading…
+                {t("uploading")}
               </>
             ) : (
-              "Upload"
+              t("upload")
             )}
           </Button>
         </div>
@@ -99,23 +101,23 @@ export default function UploadCard({
       {uploadResult && (
         <div className="mt-6 rounded-xl border border-border bg-surface-950 p-4">
           <h3 className="mb-3 text-sm font-semibold text-white">
-            Upload result
+            {t("upload_result")}
           </h3>
           <dl className="space-y-1.5 text-sm text-slate-400">
             <div className="flex gap-2">
-              <dt className="text-slate-500">Invoice:</dt>
+              <dt className="text-slate-500">{t("invoice_label")}</dt>
               <dd>{uploadResult.metadata?.invoice_number ?? "N/A"}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-slate-500">Date:</dt>
+              <dt className="text-slate-500">{t("date_label")}</dt>
               <dd>{uploadResult.metadata?.invoice_date ?? "N/A"}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-slate-500">Seller GSTIN:</dt>
+              <dt className="text-slate-500">{t("seller_gstin_colon_label")}</dt>
               <dd className="truncate">{uploadResult.metadata?.seller_gstin ?? "N/A"}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-slate-500">Items parsed:</dt>
+              <dt className="text-slate-500">{t("items_parsed_colon_label")}</dt>
               <dd>{uploadResult.items?.length ?? 0}</dd>
             </div>
           </dl>
@@ -125,10 +127,10 @@ export default function UploadCard({
                 <thead>
                   <tr className="border-b border-border text-left text-slate-500">
                     <th className="pb-2 pr-3">#</th>
-                    <th className="pb-2 pr-3">Description</th>
-                    <th className="pb-2 pr-3">Qty</th>
-                    <th className="pb-2 pr-3">Unit Price</th>
-                    <th className="pb-2">Total</th>
+                    <th className="pb-2 pr-3">{t("description")}</th>
+                    <th className="pb-2 pr-3">{t("qty")}</th>
+                    <th className="pb-2 pr-3">{t("unit_price")}</th>
+                    <th className="pb-2">{t("total")}</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">

@@ -1,8 +1,25 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
+  const { t, i18n } = useTranslation();
+
+  function toggleLanguage() {
+    const current = i18n.language || "en";
+    const next = current === "en" ? "hi" : "en";
+    i18n.changeLanguage(next);
+    localStorage.setItem("lang", next);
+  }
+
   return (
     <div className="min-h-screen bg-surface-950 text-slate-100">
+      <button
+        type="button"
+        onClick={toggleLanguage}
+        className="fixed right-6 top-6 z-20 w-auto rounded-xl border border-border bg-surface-800/50 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-surface-800 transition-colors"
+      >
+        EN / हिंदी
+      </button>
       {/* Subtle gradient mesh */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -right-1/2 h-full w-full rounded-full bg-accent/5 blur-3xl" />
@@ -15,25 +32,25 @@ export default function HomePage() {
         <section className="mx-auto max-w-6xl px-4 pt-20 pb-24 sm:px-6 sm:pt-28 sm:pb-32 lg:px-8">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
             <p className="w-full animate-fade-in-up text-sm font-medium uppercase tracking-wider text-accent" style={{ animationDelay: "0ms" }}>
-              GST invoice → inventory, automatically
+              {t("landing_tagline")}
             </p>
             <h1 className="mt-4 w-full animate-fade-in-up text-6xl font-bold tracking-tight text-white sm:text-7xl lg:text-8xl xl:text-9xl" style={{ animationDelay: "120ms" }}>
               VyaaparBill
             </h1>
             <h2 className="mt-8 w-full animate-fade-in-up text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl" style={{ animationDelay: "240ms" }}>
-              Simplifying Invoicing.
+              {t("simplifying_invoicing")}
               <br />
-              <span className="text-accent">Automating Inventory.</span>
+              <span className="text-accent">{t("automating_inventory")}</span>
             </h2>
             <p className="mt-6 w-full animate-fade-in-up text-lg leading-relaxed text-slate-400 sm:text-xl" style={{ animationDelay: "360ms" }}>
-              Drop your GST invoice PDFs—we extract items, update stock, and keep a clear{"\u00a0"}history.
+              {t("landing_hero_description")}
             </p>
             <div className="mt-10 flex w-full flex-wrap items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: "480ms" }}>
               <Link
                 to="/app"
                 className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-accent/25 transition-all duration-200 hover:scale-[1.02] hover:bg-accent-hover hover:shadow-accent/30 active:scale-[0.98]"
               >
-                Get started
+                {t("get_started")}
                 <ArrowIcon />
               </Link>
             </div>
@@ -44,29 +61,29 @@ export default function HomePage() {
         <section className="border-y border-white/5 bg-surface-900/30 py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <h2 className="animate-fade-in-up text-center text-2xl font-semibold text-white sm:text-3xl" style={{ animationDelay: "0ms" }}>
-              How it works
+              {t("how_it_works")}
             </h2>
             <p className="mx-auto mt-3 max-w-xl animate-fade-in-up text-center text-slate-400" style={{ animationDelay: "80ms" }}>
-              Three steps. No spreadsheets.
+              {t("three_steps_no_spreadsheets")}
             </p>
             <div className="mt-16 grid gap-10 sm:grid-cols-3 sm:gap-8">
               {[
                 {
                   step: "1",
-                  title: "Upload invoice",
-                  description: "Drag and drop a GST invoice PDF. We parse line items, quantities, and prices.",
+                  title: t("step_upload_invoice_title"),
+                  description: t("step_upload_invoice_description"),
                   icon: UploadIcon,
                 },
                 {
                   step: "2",
-                  title: "Inventory updates",
-                  description: "Stock is updated automatically. See product-wise quantity and last unit price.",
+                  title: t("step_inventory_updates_title"),
+                  description: t("step_inventory_updates_description"),
                   icon: InventoryIcon,
                 },
                 {
                   step: "3",
-                  title: "Full history",
-                  description: "Every uploaded invoice is stored. Search and review anytime.",
+                  title: t("step_full_history_title"),
+                  description: t("step_full_history_description"),
                   icon: InvoicesIcon,
                 },
               ].map(({ step, title, description, icon: Icon }, i) => (
@@ -92,10 +109,10 @@ export default function HomePage() {
         <section className="py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
             <p className="animate-fade-in-up text-lg text-slate-400 sm:text-xl" style={{ animationDelay: "60ms" }}>
-              Built for small businesses and traders who want
-              <span className="font-medium text-white"> less data entry </span>
+              {t("landing_built_for_small_businesses_who_want")}
+              <span className="font-medium text-white"> {t("landing_less_data_entry")} </span>
               and
-              <span className="font-medium text-white"> clearer stock visibility</span>.
+              <span className="font-medium text-white"> {t("landing_clearer_stock_visibility")}</span>.
             </p>
           </div>
         </section>
@@ -104,17 +121,17 @@ export default function HomePage() {
         <section className="border-t border-white/5 py-20 sm:py-24">
           <div className="mx-auto max-w-2xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="animate-fade-in-up text-2xl font-semibold text-white sm:text-3xl" style={{ animationDelay: "0ms" }}>
-              Ready to simplify your inventory?
+              {t("landing_ready_to_simplify")}
             </h2>
             <p className="mt-3 animate-fade-in-up text-slate-400" style={{ animationDelay: "100ms" }}>
-              Open the dashboard and upload your first invoice.
+              {t("landing_open_dashboard_desc")}
             </p>
             <Link
               to="/app"
               className="mt-8 inline-flex animate-fade-in-up items-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-accent/25 transition-all duration-200 hover:scale-[1.02] hover:bg-accent-hover active:scale-[0.98]"
               style={{ animationDelay: "200ms" }}
             >
-              Open dashboard
+              {t("landing_open_dashboard_button")}
               <ArrowIcon />
             </Link>
           </div>
@@ -122,7 +139,7 @@ export default function HomePage() {
 
         <footer className="border-t border-white/5 py-8">
           <div className="mx-auto max-w-6xl px-4 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
-            VyaaparBill · GST invoice parsing & inventory
+            {t("landing_footer_text")}
           </div>
         </footer>
       </main>

@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useToast } from "../context/ToastContext";
+import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
 import UploadCard from "../components/UploadCard";
 import InventoryCard from "../components/InventoryCard";
 import InvoiceCard from "../components/InvoiceCard";
+import SellCard from "../components/SellCard";
 import Button from "../components/Button";
 
 const API_BASE = "http://127.0.0.1:8000";
 
 export default function Dashboard() {
   const addToast = useToast();
+  const { t } = useTranslation();
   const [view, setView] = useState("upload");
 
   const [file, setFile] = useState(null);
@@ -57,7 +60,7 @@ export default function Dashboard() {
   }
 
   async function handleResetAll() {
-    if (!window.confirm("This will clear all invoices and inventory. Continue?")) {
+    if (!window.confirm(t("confirm_reset_all_data"))) {
       return;
     }
 
@@ -128,7 +131,7 @@ export default function Dashboard() {
                 role="status"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Invoice uploaded and inventory updated.
+                {t("invoice_uploaded_inventory_updated")}
               </div>
             )}
 
@@ -138,7 +141,7 @@ export default function Dashboard() {
                 onClick={handleResetAll}
                 disabled={resetting || loadingInventory || loadingInvoices}
               >
-                {resetting ? "Resetting…" : "Reset all data"}
+                {resetting ? t("resetting") : t("reset_all_data")}
               </Button>
             </div>
           </div>
@@ -178,10 +181,16 @@ export default function Dashboard() {
               />
             </div>
           )}
+
+          {view === "sell" && (
+            <div className="animate-fade-in">
+              <SellCard onSaleSuccess={fetchInventory} />
+            </div>
+          )}
         </div>
 
         <footer className="mt-12 text-center text-xs text-slate-600">
-          <Link to="/" className="hover:text-slate-500">Home</Link>
+          <Link to="/" className="hover:text-slate-500">{t("home")}</Link>
           <span className="mx-2">·</span>
           FastAPI + MongoDB + React
         </footer>

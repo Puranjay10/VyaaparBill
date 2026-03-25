@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from app.db import invoices_collection
+from app.db import invoices_collection, inventory_collection
 
 
 def get_monthly_purchase_summary() -> List[Dict[str, Any]]:
@@ -238,4 +238,240 @@ def get_product_purchase_summary() -> List[Dict[str, Any]]:
     ]
 
     return list(invoices_collection.aggregate(pipeline))
+
+
+def get_best_suppliers() -> List[Dict[str, Any]]:
+    """
+    Returns best supplier per product using average item price.
+
+    Aggregation strategy (MongoDB-only, no Python loops):
+    1. Unwind invoice `items`
+    2. Compute a per-item price:
+       - prefer items.unit_price
+       - fallback to total_amount / qty when unit_price is missing
+    3. Group by (product, supplier) to compute avg_price
+    4. Sort avg_price ascending and pick the lowest avg_price supplier per product
+    5. Return all suppliers + best supplier per product
+    """
+
+    pipeline = [
+        {"$addFields": {"_items": {"$ifNull": ["$items", []]}}},
+        {"$unwind": "$_items"},
+        {
+            "$addFields": {
+                "_product_name": {"$ifNull": ["$_items.description", "UNKNOWN"]},
+                "_supplier_gstin": {"$ifNull": ["$metadata.seller_gstin", None]},
+                "_qty_num": {
+                    "$convert": {
+                        "input": "$_items.qty",
+                        "to": "double",
+                        "onError": 0,
+                        "onNull": 0,
+                    }
+                },
+                "_unit_price_num": {
+                    "$convert": {
+                        "input": "$_items.unit_price",
+                        "to": "double",
+                        "onError": None,
+                        "onNull": None,
+                    }
+                },
+                "_total_amount_num": {
+                    "$convert": {
+                        "input": "$_items.total_amount",
+                        "to": "double",
+                        "onError": None,
+                        "onNull": None,
+                    }
+                },
+            }
+        },
+        {
+            "$addFields": {
+                "_item_price": {
+                    "$cond": [
+                        {"$ne": ["$_unit_price_num", None]},
+                        "$_unit_price_num",
+                        {
+                            "$cond": [
+                                {"$gt": ["$_qty_num", 0]},
+                                {"$divide": ["$_total_amount_num", "$_qty_num"]},
+                                None,
+                            ]
+                        },
+                    ]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": {"product_name": "$_product_name", "supplier_gstin": "$_supplier_gstin"},
+                "avg_price": {"$avg": "$_item_price"},
+            }
+        },
+        {"$sort": {"_id.product_name": 1, "avg_price": 1}},
+        {
+            "$group": {
+                "_id": "$_id.product_name",
+                "best_supplier_gstin": {"$first": "$_id.supplier_gstin"},
+                "best_price": {"$first": "$avg_price"},
+                "all_suppliers": {
+                    "$push": {
+                        "supplier_gstin": "$_id.supplier_gstin",
+                        "avg_price": "$avg_price",
+                    }
+                },
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "product_name": "$_id",
+                "best_supplier_gstin": 1,
+                "best_price": 1,
+                "all_suppliers": 1,
+            }
+        },
+    ]
+
+    return list(invoices_collection.aggregate(pipeline))
+
+
+def get_reorder_suggestions() -> List[Dict[str, Any]]:
+    """
+    Returns reorder suggestions for low-stock inventory items.
+
+    For each inventory item with qty_in_stock < 5:
+    - current_stock = qty_in_stock
+    - suggested_order_quantity = (5 * 2) - qty_in_stock
+    - best supplier = supplier intelligence (lowest avg price) computed from invoices
+      matching `inventory.description` == `items.description`
+    - estimated_price = avg price of best supplier
+
+    If no supplier data exists for that product, supplier fields are returned as null.
+    """
+
+    pipeline = [
+        {
+            "$addFields": {
+                "_product_name": "$description",
+                "_current_stock": {
+                    "$toDouble": {"$ifNull": ["$qty_in_stock", 0]},
+                },
+            }
+        },
+        {
+            "$match": {
+                "$expr": {"$lt": ["$_current_stock", 5]},
+            }
+        },
+        {
+            "$addFields": {
+                "suggested_order_quantity": {"$subtract": [10, "$_current_stock"]},
+            }
+        },
+        {
+            "$lookup": {
+                "from": invoices_collection.name,
+                "let": {"product_desc": "$_product_name"},
+                "pipeline": [
+                    {"$addFields": {"_items": {"$ifNull": ["$items", []]}}},
+                    {"$unwind": "$_items"},
+                    {
+                        "$match": {
+                            "$expr": {"$eq": ["$_items.description", "$$product_desc"]},
+                        }
+                    },
+                    {
+                        "$addFields": {
+                            "_qty_num": {
+                                "$convert": {
+                                    "input": "$_items.qty",
+                                    "to": "double",
+                                    "onError": 0,
+                                    "onNull": 0,
+                                }
+                            },
+                            "_unit_price_num": {
+                                "$convert": {
+                                    "input": "$_items.unit_price",
+                                    "to": "double",
+                                    "onError": None,
+                                    "onNull": None,
+                                }
+                            },
+                            "_total_amount_num": {
+                                "$convert": {
+                                    "input": "$_items.total_amount",
+                                    "to": "double",
+                                    "onError": None,
+                                    "onNull": None,
+                                }
+                            },
+                        }
+                    },
+                    {
+                        "$addFields": {
+                            "_item_price": {
+                                "$cond": [
+                                    {"$ne": ["$_unit_price_num", None]},
+                                    "$_unit_price_num",
+                                    {
+                                        "$cond": [
+                                            {"$gt": ["$_qty_num", 0]},
+                                            {"$divide": ["$_total_amount_num", "$_qty_num"]},
+                                            None,
+                                        ]
+                                    },
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": {
+                                "product_name": "$_items.description",
+                                "supplier_gstin": "$metadata.seller_gstin",
+                            },
+                            "avg_price": {"$avg": "$_item_price"},
+                        }
+                    },
+                    {"$sort": {"avg_price": 1}},
+                    {"$limit": 1},
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "supplier_gstin": "$_id.supplier_gstin",
+                            "estimated_price": {"$round": ["$avg_price", 2]},
+                        }
+                    },
+                ],
+                "as": "_bestSupplier",
+            }
+        },
+        {
+            "$addFields": {
+                "best_supplier_gstin": {
+                    "$arrayElemAt": ["$_bestSupplier.supplier_gstin", 0]
+                },
+                "estimated_price": {
+                    "$arrayElemAt": ["$_bestSupplier.estimated_price", 0]
+                },
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "product_name": "$_product_name",
+                "current_stock": "$_current_stock",
+                "suggested_order_quantity": 1,
+                "best_supplier_gstin": 1,
+                "estimated_price": 1,
+            }
+        },
+        {"$sort": {"current_stock": 1}},
+    ]
+
+    return list(inventory_collection.aggregate(pipeline))
 

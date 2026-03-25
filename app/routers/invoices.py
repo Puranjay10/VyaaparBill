@@ -4,7 +4,7 @@ import os
 from fastapi import APIRouter, UploadFile, File
 import fitz  # PyMuPDF
 
-from app.db import invoices_collection, inventory_collection
+from app.db import invoices_collection, inventory_collection, sales_collection
 from app.services.invoice_logic import (
     detect_table_type,
     extract_table_section,
@@ -99,7 +99,98 @@ async def upload_invoice(file: UploadFile = File(...)):
 
 @router.get("/inventory")
 def get_inventory():
-    items = list(inventory_collection.find({}, {"_id": 0}).sort("updated_at", -1))
+    DEFAULT_LOW_STOCK_THRESHOLD = 5
+    pipeline = [
+        {"$sort": {"updated_at": -1}},
+        {
+            "$lookup": {
+                "from": sales_collection.name,
+                "let": {"product_desc": "$description"},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {"$eq": ["$product_name", "$$product_desc"]},
+                        }
+                    },
+                    {"$sort": {"sold_at": -1}},
+                    {"$limit": 1},
+                    {"$project": {"selling_price": 1}},
+                ],
+                "as": "_latestSale",
+            }
+        },
+        {
+            "$addFields": {
+                "low_stock_threshold": {
+                    "$ifNull": ["$low_stock_threshold", DEFAULT_LOW_STOCK_THRESHOLD],
+                },
+                "qty_in_stock_num": {
+                    "$toDouble": {"$ifNull": ["$qty_in_stock", 0]},
+                },
+                "_last_purchase_price": {
+                    "$ifNull": ["$last_unit_price", "$last_price"],
+                },
+                "latest_selling_price": {
+                    "$arrayElemAt": ["$_latestSale.selling_price", 0]
+                },
+                "is_low_stock": {
+                    "$lt": [
+                        {"$toDouble": {"$ifNull": ["$qty_in_stock", 0]}},
+                        {
+                            "$ifNull": [
+                                "$low_stock_threshold",
+                                DEFAULT_LOW_STOCK_THRESHOLD,
+                            ]
+                        },
+                    ]
+                },
+            }
+        },
+        {
+            "$addFields": {
+                "profit_per_unit": {
+                    "$cond": [
+                        {"$ne": ["$latest_selling_price", None]},
+                        {
+                            "$subtract": [
+                                {"$toDouble": "$latest_selling_price"},
+                                {"$toDouble": {"$ifNull": ["$_last_purchase_price", 0]}},
+                            ]
+                        },
+                        None,
+                    ]
+                },
+                "potential_profit": {
+                    "$cond": [
+                        {"$ne": ["$latest_selling_price", None]},
+                        {
+                            "$multiply": [
+                                {
+                                    "$subtract": [
+                                        {"$toDouble": "$latest_selling_price"},
+                                        {
+                                            "$toDouble": {
+                                                "$ifNull": ["$_last_purchase_price", 0]
+                                            }
+                                        },
+                                    ]
+                                },
+                                "$qty_in_stock_num",
+                            ]
+                        },
+                        None,
+                    ]
+                },
+            }
+        },
+        {"$project": {"_latestSale": 0, "qty_in_stock_num": 0, "_last_purchase_price": 0}},
+    ]
+
+    items = list(inventory_collection.aggregate(pipeline))
+    # Keep response backward compatible: do not include Mongo _id in the API output.
+    for it in items:
+        it.pop("_id", None)
+
     return {"count": len(items), "inventory": items}
 
 

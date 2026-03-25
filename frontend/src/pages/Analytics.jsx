@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 import { useToast } from "../context/ToastContext";
 import Sidebar from "../components/Sidebar";
@@ -32,6 +33,7 @@ function toNumberOrZero(v) {
 export default function Analytics() {
   const addToast = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [monthly, setMonthly] = useState([]);
   const [loadingMonthly, setLoadingMonthly] = useState(false);
@@ -44,6 +46,15 @@ export default function Analytics() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productError, setProductError] = useState(null);
+
+  const [reorderSuggestions, setReorderSuggestions] = useState([]);
+  const [loadingReorder, setLoadingReorder] = useState(false);
+  const [reorderError, setReorderError] = useState(null);
+
+  const [bestSuppliers, setBestSuppliers] = useState([]);
+  const [loadingBestSuppliers, setLoadingBestSuppliers] = useState(false);
+  const [bestSuppliersError, setBestSuppliersError] = useState(null);
+  const [bestPriceSortDir, setBestPriceSortDir] = useState("asc");
 
   const [sellerSort, setSellerSort] = useState({ key: "total_purchase", dir: "desc" });
 
@@ -92,8 +103,44 @@ export default function Analytics() {
     }
   }
 
+  async function fetchReorderSuggestions() {
+    try {
+      setReorderError(null);
+      setLoadingReorder(true);
+      const res = await axios.get(`${API_BASE}/analytics/reorder-suggestions`);
+      setReorderSuggestions(res.data || []);
+    } catch (err) {
+      console.error(err);
+      setReorderError("Failed to load reorder suggestions.");
+      addToast("Failed to load reorder suggestions. Is the backend running?", "error");
+    } finally {
+      setLoadingReorder(false);
+    }
+  }
+
+  async function fetchBestSuppliers() {
+    try {
+      setBestSuppliersError(null);
+      setLoadingBestSuppliers(true);
+      const res = await axios.get(`${API_BASE}/analytics/best-suppliers`);
+      setBestSuppliers(res.data || []);
+    } catch (err) {
+      console.error(err);
+      setBestSuppliersError("Failed to load best suppliers.");
+      addToast("Failed to load best suppliers. Is the backend running?", "error");
+    } finally {
+      setLoadingBestSuppliers(false);
+    }
+  }
+
   async function refreshAll() {
-    await Promise.all([fetchMonthly(), fetchSellerSummary(), fetchProductSummary()]);
+    await Promise.all([
+      fetchMonthly(),
+      fetchSellerSummary(),
+      fetchProductSummary(),
+      fetchBestSuppliers(),
+      fetchReorderSuggestions(),
+    ]);
   }
 
   useEffect(() => {
@@ -122,11 +169,25 @@ export default function Analytics() {
     return rows;
   }, [products]);
 
+  const sortedBestSuppliers = useMemo(() => {
+    const rows = [...(bestSuppliers || [])];
+    const dir = bestPriceSortDir === "asc" ? 1 : -1;
+    rows.sort(
+      (a, b) =>
+        (toNumberOrZero(a.best_price) - toNumberOrZero(b.best_price)) * dir
+    );
+    return rows;
+  }, [bestSuppliers, bestPriceSortDir]);
+
   function toggleSellerSort(nextKey) {
     setSellerSort((prev) => {
       if (prev.key !== nextKey) return { key: nextKey, dir: "desc" };
       return { key: nextKey, dir: prev.dir === "desc" ? "asc" : "desc" };
     });
+  }
+
+  function toggleBestPriceSort() {
+    setBestPriceSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
   }
 
   return (
@@ -137,8 +198,8 @@ export default function Analytics() {
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-white">Analytics</h1>
-              <p className="mt-1 text-sm text-slate-400">Monthly purchases, seller totals, and product breakdown.</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-white">{t("analytics_title")}</h1>
+              <p className="mt-1 text-sm text-slate-400">{t("analytics_description")}</p>
             </div>
             <div className="flex items-center justify-end gap-2">
               <Button
@@ -149,20 +210,20 @@ export default function Analytics() {
                 {(loadingMonthly || loadingSellers || loadingProducts) ? (
                   <>
                     <Spinner className="h-4 w-4" />
-                    Refreshing…
+                    {t("refreshing")}
                   </>
                 ) : (
-                  "Refresh"
+                  t("refresh")
                 )}
               </Button>
             </div>
           </div>
 
           <Card
-            title="Monthly purchases"
+            title={t("monthly_purchases")}
             action={
               <Button variant="secondary" disabled={loadingMonthly} onClick={fetchMonthly}>
-                {loadingMonthly ? <Spinner className="h-4 w-4" /> : "Refresh"}
+                {loadingMonthly ? <Spinner className="h-4 w-4" /> : t("refresh")}
               </Button>
             }
           >
@@ -170,19 +231,19 @@ export default function Analytics() {
               {loadingMonthly ? (
                 <TableSkeleton rows={6} cols={3} />
               ) : monthlyError ? (
-                <EmptyState title="Couldn’t load monthly purchases" description={monthlyError} />
+                <EmptyState title={t("couldnt_load_monthly_purchases")} description={monthlyError} />
               ) : monthly.length === 0 ? (
                 <EmptyState
-                  title="No data yet"
-                  description="Upload invoices to see monthly purchase totals."
+                  title={t("no_data_yet")}
+                  description={t("upload_invoices_to_see_monthly_purchase_totals")}
                 />
               ) : (
                 <table className="w-full min-w-[500px] text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-slate-500">
-                      <th className="pb-3 pr-3 font-medium">Month</th>
-                      <th className="pb-3 pr-3 font-medium">Total purchase</th>
-                      <th className="pb-3 font-medium">Invoice count</th>
+                      <th className="pb-3 pr-3 font-medium">{t("month")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("total_purchase")}</th>
+                      <th className="pb-3 font-medium">{t("invoice_count")}</th>
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -200,10 +261,10 @@ export default function Analytics() {
           </Card>
 
           <Card
-            title="Seller summary"
+            title={t("seller_summary")}
             action={
               <Button variant="secondary" disabled={loadingSellers} onClick={fetchSellerSummary}>
-                {loadingSellers ? <Spinner className="h-4 w-4" /> : "Refresh"}
+                {loadingSellers ? <Spinner className="h-4 w-4" /> : t("refresh")}
               </Button>
             }
           >
@@ -211,11 +272,11 @@ export default function Analytics() {
               {loadingSellers ? (
                 <TableSkeleton rows={6} cols={4} />
               ) : sellerError ? (
-                <EmptyState title="Couldn’t load seller summary" description={sellerError} />
+                <EmptyState title={t("couldnt_load_seller_summary")} description={sellerError} />
               ) : sortedSellers.length === 0 ? (
                 <EmptyState
-                  title="No data yet"
-                  description="Upload invoices to see seller-wise totals."
+                  title={t("no_data_yet")}
+                  description={t("upload_invoices_to_see_seller_wise_totals")}
                 />
               ) : (
                 <table className="w-full min-w-[650px] text-sm">
@@ -227,7 +288,7 @@ export default function Analytics() {
                           onClick={() => toggleSellerSort("seller_gstin")}
                           className="inline-flex items-center gap-1 hover:text-slate-300"
                         >
-                          Seller GSTIN
+                          {t("seller_gstin")}
                         </button>
                       </th>
                       <th className="pb-3 pr-3 font-medium">
@@ -236,7 +297,7 @@ export default function Analytics() {
                           onClick={() => toggleSellerSort("total_purchase")}
                           className="inline-flex items-center gap-1 hover:text-slate-300"
                         >
-                          Total purchase
+                          {t("total_purchase")}
                         </button>
                       </th>
                       <th className="pb-3 pr-3 font-medium">
@@ -245,7 +306,7 @@ export default function Analytics() {
                           onClick={() => toggleSellerSort("invoice_count")}
                           className="inline-flex items-center gap-1 hover:text-slate-300"
                         >
-                          Invoice count
+                          {t("invoice_count")}
                         </button>
                       </th>
                       <th className="pb-3 font-medium">
@@ -254,7 +315,7 @@ export default function Analytics() {
                           onClick={() => toggleSellerSort("total_items")}
                           className="inline-flex items-center gap-1 hover:text-slate-300"
                         >
-                          Total items
+                          {t("total_items")}
                         </button>
                       </th>
                     </tr>
@@ -277,10 +338,10 @@ export default function Analytics() {
           </Card>
 
           <Card
-            title="Product summary"
+            title={t("product_summary")}
             action={
               <Button variant="secondary" disabled={loadingProducts} onClick={fetchProductSummary}>
-                {loadingProducts ? <Spinner className="h-4 w-4" /> : "Refresh"}
+                {loadingProducts ? <Spinner className="h-4 w-4" /> : t("refresh")}
               </Button>
             }
           >
@@ -288,21 +349,21 @@ export default function Analytics() {
               {loadingProducts ? (
                 <TableSkeleton rows={7} cols={5} />
               ) : productError ? (
-                <EmptyState title="Couldn’t load product summary" description={productError} />
+                <EmptyState title={t("couldnt_load_product_summary")} description={productError} />
               ) : sortedProducts.length === 0 ? (
                 <EmptyState
-                  title="No data yet"
-                  description="Upload invoices to see product-level totals."
+                  title={t("no_data_yet")}
+                  description={t("upload_invoices_to_see_product_level_totals")}
                 />
               ) : (
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-slate-500">
-                      <th className="pb-3 pr-3 font-medium">Description</th>
-                      <th className="pb-3 pr-3 font-medium">Total qty</th>
-                      <th className="pb-3 pr-3 font-medium">Total purchase</th>
-                      <th className="pb-3 pr-3 font-medium">Avg unit price</th>
-                      <th className="pb-3 font-medium">Invoice count</th>
+                      <th className="pb-3 pr-3 font-medium">{t("description")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("total_qty")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("total_purchase")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("avg_unit_price")}</th>
+                      <th className="pb-3 font-medium">{t("invoice_count")}</th>
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -322,8 +383,153 @@ export default function Analytics() {
               )}
             </div>
             <p className="mt-3 text-xs text-slate-600">
-              Sorted by total purchase (descending).
+              {t("sorted_by_total_purchase_desc")}
             </p>
+          </Card>
+
+          <Card
+            title={t("best_suppliers")}
+            action={
+              <Button
+                variant="secondary"
+                disabled={loadingBestSuppliers}
+                onClick={fetchBestSuppliers}
+              >
+                {loadingBestSuppliers ? <Spinner className="h-4 w-4" /> : t("refresh")}
+              </Button>
+            }
+          >
+            <div className="overflow-x-auto scrollbar-thin">
+              {loadingBestSuppliers ? (
+                <TableSkeleton rows={7} cols={4} />
+              ) : bestSuppliersError ? (
+                <EmptyState title={t("couldnt_load_best_suppliers")} description={bestSuppliersError} />
+              ) : sortedBestSuppliers.length === 0 ? (
+                <EmptyState
+                  title={t("no_sales_data_yet")}
+                  description={t("record_sales_to_see_best_supplier_intelligence")}
+                />
+              ) : (
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-slate-500">
+                      <th className="pb-3 pr-3 font-medium">{t("product_name")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("best_supplier_gstin")}</th>
+                      <th className="pb-3 pr-3 font-medium">
+                        <button
+                          type="button"
+                          onClick={toggleBestPriceSort}
+                          className="inline-flex items-center gap-2 hover:text-slate-300"
+                        >
+                          {t("best_price")}
+                          <span className="text-xs text-slate-600">
+                            {bestPriceSortDir === "asc" ? "↑" : "↓"}
+                          </span>
+                        </button>
+                      </th>
+                      <th className="pb-3 font-medium">{t("all_suppliers")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    {sortedBestSuppliers.map((row, idx) => (
+                      <tr key={idx} className="border-b border-border/50">
+                        <td className="py-3 pr-3">{row.product_name ?? "—"}</td>
+                        <td className="py-3 pr-3">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-slate-500">
+                                {row.best_supplier_gstin ?? "—"}
+                              </span>
+                              <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                                {t("best")}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-3">{formatMoney(row.best_price)}</td>
+                        <td className="py-3">
+                          <div className="max-w-[520px]">
+                            <ul className="space-y-1">
+                              {(row.all_suppliers || []).map((s, j) => (
+                                <li key={j} className="text-xs text-slate-400">
+                                  <span className="font-mono">{s.supplier_gstin ?? "—"}</span>
+                                  <span className="text-slate-600"> · </span>
+                                  <span className={toNumberOrZero(s.avg_price) < 0 ? "text-red-400" : "text-slate-300"}>
+                                    {s.avg_price === null || s.avg_price === undefined
+                                      ? "—"
+                                      : formatMoney(s.avg_price)}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </Card>
+
+          <Card
+            title={t("reorder_suggestions")}
+            action={
+              <Button variant="secondary" disabled={loadingReorder} onClick={fetchReorderSuggestions}>
+                {loadingReorder ? <Spinner className="h-4 w-4" /> : t("refresh")}
+              </Button>
+            }
+          >
+            <div className="overflow-x-auto scrollbar-thin">
+              {loadingReorder ? (
+                <TableSkeleton rows={6} cols={5} />
+              ) : reorderError ? (
+                <EmptyState title={t("couldnt_load_reorder_suggestions")} description={reorderError} />
+              ) : reorderSuggestions.length === 0 ? (
+                <EmptyState title={t("all_items_sufficiently_stocked")} />
+              ) : (
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-slate-500">
+                      <th className="pb-3 pr-3 font-medium">{t("product_name")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("current_stock")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("suggested_order_quantity")}</th>
+                      <th className="pb-3 pr-3 font-medium">{t("best_supplier")}</th>
+                      <th className="pb-3 font-medium">{t("estimated_price")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    {reorderSuggestions.map((row, idx) => {
+                      const currentStock = Number(row.current_stock ?? 0) || 0;
+                      const isLow = currentStock < 5;
+                      const rowClass = isLow
+                        ? "border-b border-border/50 bg-red-500/10"
+                        : "border-b border-border/50";
+                      const estimatedPrice =
+                        row.estimated_price === null || row.estimated_price === undefined
+                          ? t("no_data")
+                          : formatMoney(row.estimated_price);
+                      const bestSupplier =
+                        row.best_supplier_gstin === null || row.best_supplier_gstin === undefined
+                          ? t("no_data")
+                          : row.best_supplier_gstin;
+
+                      return (
+                        <tr key={idx} className={rowClass}>
+                          <td className="py-3 pr-3">{row.product_name ?? "—"}</td>
+                          <td className="py-3 pr-3">{currentStock}</td>
+                          <td className="py-3 pr-3 font-semibold">
+                            {row.suggested_order_quantity ?? 0}
+                          </td>
+                          <td className="py-3 pr-3">{bestSupplier}</td>
+                          <td className="py-3">{estimatedPrice}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </Card>
 
           <footer className="mt-12 text-center text-xs text-slate-600">

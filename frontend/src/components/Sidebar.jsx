@@ -1,13 +1,24 @@
 import { Link } from "react-router-dom";
-
-const nav = [
-  { id: "upload", label: "Upload", icon: UploadIcon },
-  { id: "inventory", label: "Inventory", icon: InventoryIcon },
-  { id: "invoices", label: "Invoices", icon: InvoicesIcon },
-  { id: "analytics", label: "Analytics", icon: ChartIcon, to: "/analytics" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function Sidebar({ currentView, onNavigate }) {
+  const { t, i18n } = useTranslation();
+
+  const nav = [
+    { id: "upload", label: t("upload"), icon: UploadIcon },
+    { id: "inventory", label: t("inventory"), icon: InventoryIcon },
+    { id: "invoices", label: t("invoices"), icon: InvoicesIcon },
+    { id: "sell", label: t("sell_product"), icon: SellIcon },
+    { id: "analytics", label: t("analytics"), icon: ChartIcon, to: "/analytics" },
+  ];
+
+  function toggleLanguage() {
+    const current = i18n.language || "en";
+    const next = current === "en" ? "hi" : "en";
+    i18n.changeLanguage(next);
+    localStorage.setItem("lang", next);
+  }
+
   return (
     <aside className="flex w-full shrink-0 flex-col border-b border-border bg-surface-900/80 sm:w-56 sm:border-b-0 sm:border-r sm:shadow-sidebar">
       <Link to="/" className="flex items-center gap-2 px-4 py-5 sm:px-5">
@@ -29,6 +40,16 @@ export default function Sidebar({ currentView, onNavigate }) {
           />
         ))}
       </nav>
+
+      <div className="mt-auto px-2 pb-4 sm:px-3">
+        <button
+          type="button"
+          onClick={toggleLanguage}
+          className="w-full rounded-xl border border-border bg-surface-800/50 px-3 py-2.5 text-left text-sm font-medium text-slate-200 hover:bg-surface-800 transition-colors"
+        >
+          EN / हिंदी
+        </button>
+      </div>
     </aside>
   );
 }
@@ -95,6 +116,14 @@ function ChartIcon() {
   return (
     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3v18m4-14v14m4-10v10M7 7v14M3 21h18" />
+    </svg>
+  );
+}
+
+function SellIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
     </svg>
   );
 }

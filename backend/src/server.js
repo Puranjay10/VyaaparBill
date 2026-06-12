@@ -3,6 +3,7 @@ require("dotenv").config();
 const express=require("express");
 const cors=require("cors");
 const authRoutes=require("./routes/authRoutes");
+const protect=require("./middleware/authMiddleware");
 
 const connectDB=require("./config/db");
 
@@ -17,6 +18,14 @@ app.use("/api/auth",authRoutes);
 
 app.get("/",(req,res)=>{
     res.send("VyaaparBill backend running.");
+});
+
+app.get("/api/test",protect,(req,res)=>{
+
+    res.json({
+        message:"Protected route accessed",
+        user:req.user,
+    });
 });
 
 const PORT= process.env.PORT || 5000;

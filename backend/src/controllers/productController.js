@@ -1,5 +1,6 @@
 const Product=require("../models/Product");
 
+//Create product
 const createProduct=async(req,res)=>{
     try{
         const{
@@ -42,6 +43,8 @@ const createProduct=async(req,res)=>{
     }
 };
 
+
+//Gt All Products
 const getProducts = async (req, res) => {
   try {
 
@@ -58,6 +61,8 @@ const getProducts = async (req, res) => {
   }
 };
 
+
+//Get product by id 
 const getProductById=async(req,res)=>{
     try{
         const product=await Product.findById(
@@ -78,6 +83,8 @@ const getProductById=async(req,res)=>{
     }
 };
 
+
+//Update Product
 const updateProduct=async (req,res)=>{
     try{
         const product= await Product.findById(
@@ -108,6 +115,8 @@ const updateProduct=async (req,res)=>{
     }
 };
 
+
+//Delete Product
 const deleteProduct = async (req, res) => {
   try {
 
@@ -138,6 +147,29 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+//Search Products
+const searchProducts = async (req, res) => {
+  try {
+
+    const keyword = req.query.name;
+
+    const products = await Product.find({
+      name: {
+        $regex: keyword,
+        $options: "i",
+      },
+    });
+
+    res.status(200).json(products);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
+  }
+};
 
 module.exports={
     createProduct,
@@ -145,4 +177,5 @@ module.exports={
     getProductById,
     updateProduct,
     deleteProduct,
+    searchProducts,
 };

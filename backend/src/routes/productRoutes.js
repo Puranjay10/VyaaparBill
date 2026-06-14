@@ -9,10 +9,12 @@ const {createProduct,
         getProductById,
         updateProduct,
         deleteProduct,
+        searchProducts,
 }=require("../controllers/productController");
 
 router.post("/",protect,createProduct);
 router.get("/",protect,getProducts);
+router.get("/search",protect,searchProducts);
 router.get("/:id",protect,getProductById);
 router.put("/:id",protect,updateProduct);
 router.delete("/:id",protect,deleteProduct);

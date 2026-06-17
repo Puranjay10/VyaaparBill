@@ -53,7 +53,10 @@ const getProducts = async (req, res) => {
 
     const skip=(page-1)*limit;
 
+    const sortField=req.query.sort || "createdAt";
+
     const products = await Product.find()
+    .sort(sortField)
     .skip(skip)
     .limit(limit);
 

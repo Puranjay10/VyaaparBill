@@ -5,6 +5,8 @@ const cors=require("cors");
 const authRoutes=require("./routes/authRoutes");
 const protect=require("./middleware/authMiddleware");
 const productRoutes=require("./routes/productRoutes");
+const supplierRoutes=require("./routes/supplierRoutes");
+
 
 const connectDB=require("./config/db");
 
@@ -18,6 +20,8 @@ app.use(express.json());
 app.use("/api/auth",authRoutes);
 
 app.use("/api/products",productRoutes);
+
+app.use("/api/suppliers",supplierRoutes);
 
 app.get("/",(req,res)=>{
     res.send("VyaaparBill backend running.");

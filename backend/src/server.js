@@ -6,7 +6,7 @@ const authRoutes=require("./routes/authRoutes");
 const protect=require("./middleware/authMiddleware");
 const productRoutes=require("./routes/productRoutes");
 const supplierRoutes=require("./routes/supplierRoutes");
-
+const purchaseRoutes=require("./routes/purchaseRoutes");
 
 const connectDB=require("./config/db");
 
@@ -22,6 +22,8 @@ app.use("/api/auth",authRoutes);
 app.use("/api/products",productRoutes);
 
 app.use("/api/suppliers",supplierRoutes);
+
+app.use("/api/purchases",purchaseRoutes);
 
 app.get("/",(req,res)=>{
     res.send("VyaaparBill backend running.");

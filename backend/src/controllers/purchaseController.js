@@ -36,6 +36,25 @@ const createPurchase=async(req,res)=>{
     }
 };
 
+const getPurchases = async (req, res) => {
+  try {
+
+    const purchases = await Purchase.find()
+      .populate("supplierId")
+      .populate("products.productId");
+
+    res.status(200).json(purchases);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
+  }
+};
+
 module.exports={
     createPurchase,
+    getPurchases,
 };

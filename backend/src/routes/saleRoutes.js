@@ -7,7 +7,13 @@ const protect =
 
 const {
   createSale,
+  getSales,
+  getSaleById,
 } = require("../controllers/saleController");
+
+router.get("/",protect,getSales);
+
+router.get("/:id",protect,getSaleById);
 
 router.post(
   "/",

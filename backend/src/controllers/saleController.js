@@ -1,77 +1,17 @@
 const Sale = require("../models/Sale");
-const Product = require("../models/Product");
-const Customer=require("../models/Customer");
+const saleService = require("../services/saleService");
+const asyncHandler = require("../utils/asyncHandler");
 
-const createSale = async (req, res) => {
-  try {
+const createSale = asyncHandler(async (req, res) => {
 
-    const {
-      customerId,
-      products,
-      totalAmount,
-    } = req.body;
+  const sale = await saleService.createSale(req.body);
 
-    // Step 1: Validate Customer
+  res.status(201).json({
+    message: "Sale created successfully",
+    sale,
+  });
 
-    const customer = await Customer.findById(customerId);
-
-    if (!customer) {
-      return res.status(404).json({
-        message: "Customer not found",
-      });
-    }
-
-    // Step 2: Validate Products & Stock
-
-    for (const item of products) {
-
-      const product = await Product.findById(item.productId);
-
-      if (!product) {
-        return res.status(404).json({
-          message: `Product not found`,
-        });
-      }
-
-      if (product.quantity < item.quantity) {
-        return res.status(400).json({
-          message: `Insufficient stock for ${product.name}`,
-        });
-      }
-    }
-
-    // Step 3: Create Sale
-
-    const sale = await Sale.create({
-      customerId,
-      products,
-      totalAmount,
-    });
-
-    // Step 4: Reduce Inventory
-
-    for (const item of products) {
-
-      const product = await Product.findById(item.productId);
-
-      product.quantity -= item.quantity;
-
-      await product.save();
-    }
-
-    res.status(201).json({
-      message: "Sale created successfully",
-      sale,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
-  }
-};
+});
 
 const getSales = async (req, res) => {
   try {

@@ -1,4 +1,6 @@
 const express=require("express");
+const validateProduct = require("../validators/productValidator");
+const validate = require("../middleware/validationMiddleware");
 
 const router=express.Router();
 
@@ -12,7 +14,7 @@ const {createProduct,
         searchProducts,
 }=require("../controllers/productController");
 
-router.post("/",protect,createProduct);
+router.post("/",protect,validateProduct,validate,createProduct);
 router.get("/",protect,getProducts);
 router.get("/search",protect,searchProducts);
 router.get("/:id",protect,getProductById);

@@ -1,4 +1,6 @@
 const express = require("express");
+const customerValidator = require("../validators/customerValidator");
+const validate = require("../middleware/validationMiddleware");
 
 const router = express.Router();
 
@@ -13,7 +15,7 @@ const {
   deleteCustomer,
 } = require("../controllers/customerController");
 
-router.post("/", protect, createCustomer);
+router.post("/", protect,customerValidator,validate,createCustomer);
 
 router.get("/", protect, getCustomers);
 

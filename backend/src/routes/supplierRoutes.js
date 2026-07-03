@@ -1,4 +1,6 @@
 const express = require("express");
+const validateSupplier = require("../validators/supplierValidator");
+const validate = require("../middleware/validationMiddleware");
 
 const router = express.Router();
 
@@ -13,7 +15,7 @@ const {
   deleteSupplier,
 } = require("../controllers/supplierController");
 
-router.post("/", protect, createSupplier);
+router.post("/", protect,validateSupplier,validate,createSupplier);
 
 router.get("/", protect, getSuppliers);
 

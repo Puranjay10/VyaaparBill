@@ -1,7 +1,7 @@
 const Customer = require("../models/Customer");
+const asyncHandler=require("../utils/asyncHandler");
 
-const createCustomer = async (req, res) => {
-  try {
+const createCustomer = asyncHandler(async (req, res) => {
 
     const {
       name,
@@ -20,14 +20,7 @@ const createCustomer = async (req, res) => {
 
     res.status(201).json(customer);
 
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
-  }
-};
+  });
 
 const getCustomers = async (req, res) => {
   try {

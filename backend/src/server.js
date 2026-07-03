@@ -9,7 +9,7 @@ const supplierRoutes=require("./routes/supplierRoutes");
 const purchaseRoutes=require("./routes/purchaseRoutes");
 const customerRoutes=require("./routes/customerRoutes");
 const saleRoutes=require("./routes/saleRoutes");
-
+const {errorHandler}=require("./middleware/errorMiddleware");
 
 const connectDB=require("./config/db");
 
@@ -43,6 +43,8 @@ app.get("/api/test",protect,(req,res)=>{
         user:req.user,
     });
 });
+
+app.use(errorHandler);
 
 const PORT= process.env.PORT || 5000;
 

@@ -10,6 +10,8 @@ const purchaseRoutes=require("./routes/purchaseRoutes");
 const customerRoutes=require("./routes/customerRoutes");
 const saleRoutes=require("./routes/saleRoutes");
 const {errorHandler}=require("./middleware/errorMiddleware");
+const generateInvoiceNumber = require("./utils/generateInvoiceNumber");
+const invoiceRoutes = require("./routes/invoiceRoutes");
 
 const connectDB=require("./config/db");
 
@@ -32,6 +34,8 @@ app.use("/api/customers",customerRoutes);
 
 app.use("/api/sales",saleRoutes);
 
+app.use("/api/invoices", invoiceRoutes);
+
 app.get("/",(req,res)=>{
     res.send("VyaaparBill backend running.");
 });
@@ -42,6 +46,16 @@ app.get("/api/test",protect,(req,res)=>{
         message:"Protected route accessed",
         user:req.user,
     });
+});
+
+app.get("/invoice-test", async (req, res) => {
+
+    const invoiceNumber = await generateInvoiceNumber();
+
+    res.json({
+        invoiceNumber,
+    });
+
 });
 
 app.use(errorHandler);

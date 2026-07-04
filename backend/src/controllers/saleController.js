@@ -4,11 +4,12 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const createSale = asyncHandler(async (req, res) => {
 
-  const sale = await saleService.createSale(req.body);
+const result = await saleService.createSale(req.body);
 
   res.status(201).json({
-    message: "Sale created successfully",
-    sale,
+      message: "Sale created successfully",
+      sale: result.sale,
+      invoice: result.invoice,
   });
 
 });

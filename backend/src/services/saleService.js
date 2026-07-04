@@ -2,6 +2,7 @@ const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 const Customer = require("../models/Customer");
 const ApiError=require("../utils/ApiError");
+const invoiceService=require("./invoiceService");
 
 const createSale = async ({
   customerId,
@@ -50,7 +51,15 @@ const createSale = async ({
     await product.save();
   }
 
-  return sale;
+  const invoice = await invoiceService.createInvoice(
+    sale._id
+  );
+  
+  return{
+    sale,
+    invoice,
+  };
+
 };
 
 module.exports = {

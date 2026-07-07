@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from services.ocr import extract_text_from_pdf
 from services.ai_parser import parse_invoice
+from services.validator import validate_invoice
 import os
 import shutil
 
@@ -38,7 +39,8 @@ async def upload_invoice(file: UploadFile = File(...)):
     try:
 
         invoice = parse_invoice(text)
-
+        invoice = validate_invoice(invoice)
+        
         return {
             "message": "Invoice parsed successfully",
             "invoice": invoice

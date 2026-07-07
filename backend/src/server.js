@@ -12,6 +12,7 @@ const saleRoutes=require("./routes/saleRoutes");
 const {errorHandler}=require("./middleware/errorMiddleware");
 const generateInvoiceNumber = require("./utils/generateInvoiceNumber");
 const invoiceRoutes = require("./routes/invoiceRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 const connectDB=require("./config/db");
 
@@ -35,6 +36,8 @@ app.use("/api/customers",customerRoutes);
 app.use("/api/sales",saleRoutes);
 
 app.use("/api/invoices", invoiceRoutes);
+
+app.use("/api/ai", aiRoutes);
 
 app.get("/",(req,res)=>{
     res.send("VyaaparBill backend running.");

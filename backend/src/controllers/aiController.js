@@ -1,4 +1,6 @@
 const { processInvoice } = require("../services/aiService");
+const { generatePurchasePreview } = require("../services/previewService");
+const { confirmPurchase } = require("../services/confirmPurchaseService");
 
 const processInvoiceController = async (req, res) => {
 
@@ -12,7 +14,17 @@ const processInvoiceController = async (req, res) => {
 
         const result = await processInvoice(req.file.path);
 
-        res.status(200).json(result);
+        const preview = await generatePurchasePreview(
+            result.invoice
+        );
+
+        res.status(200).json({
+            message: "Purchase preview generated successfully",
+
+            preview,
+
+            invoice: result.invoice,
+        });
 
     } catch (error) {
 
@@ -24,6 +36,33 @@ const processInvoiceController = async (req, res) => {
 
 };
 
+const confirmPurchaseController = async (req, res) => {
+
+    try {
+
+        const purchase = await confirmPurchase(req.body.invoice);
+
+        res.status(201).json({
+
+            message: "Purchase created successfully",
+
+            purchase,
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            message: error.message,
+
+        });
+
+    }
+
+};
+
 module.exports = {
     processInvoiceController,
+    confirmPurchaseController,
 };

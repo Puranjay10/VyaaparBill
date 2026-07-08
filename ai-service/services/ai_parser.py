@@ -17,14 +17,22 @@ def parse_invoice(text):
     prompt = f"""
 You are an invoice extraction engine.
 
-Extract ONLY the following fields.
+Extract the supplier details, invoice details and all products from the invoice.
+
+If any supplier field is not present in the invoice, return an empty string for that field.
 
 Return ONLY valid JSON.
 
 Schema:
 
 {{
-  "supplier": "",
+  "supplier": {{
+    "name": "",
+    "email": "",
+    "phone": "",
+    "gstNumber": "",
+    "address": ""
+  }},
   "invoiceNumber": "",
   "invoiceDate": "",
   "products": [
@@ -36,6 +44,7 @@ Schema:
     }}
   ]
 }}
+
 
 Invoice:
 

@@ -6,6 +6,7 @@ const upload = require("../middleware/uploadMiddleware");
 
 const {
     processInvoiceController,
+    confirmPurchaseController,
 } = require("../controllers/aiController");
 
 // const protect = require("../middleware/authMiddleware");
@@ -15,6 +16,11 @@ router.post(
     // protect,
     upload.single("file"),
     processInvoiceController
+);
+
+router.post(
+    "/confirm-purchase",
+    confirmPurchaseController
 );
 
 module.exports = router;

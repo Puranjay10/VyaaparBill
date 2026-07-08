@@ -1,60 +1,45 @@
-const Purchase=require("../models/Purchase");
-const Product=require("../models/Product");
+const { createPurchase } = require("../services/purchaseService");
+const Purchase = require("../models/Purchase");
 
-const createPurchase=async(req,res)=>{
-    try{
+const createPurchaseController = async (req, res) => {
 
-        const{
-            supplierId,
-            products,
-            totalAmount,
-        }=req.body;
+    try {
 
-        const purchase=await Purchase.create({
-            supplierId,
-            products,
-            totalAmount,
-        });
-
-        for(const item of products){
-            const product=await Product.findById(
-                item.productId
-            );
-
-            if(product){
-                product.quantity += item.quantity;
-
-                await product.save();
-            }
-        }
+        const purchase = await createPurchase(req.body);
 
         res.status(201).json(purchase);
-    } catch(error){
+
+    } catch (error) {
+
         res.status(500).json({
-            message:error.message,
+            message: error.message,
         });
+
     }
+
 };
 
 const getPurchases = async (req, res) => {
-  try {
 
-    const purchases = await Purchase.find()
-      .populate("supplierId")
-      .populate("products.productId");
+    try {
 
-    res.status(200).json(purchases);
+        const purchases = await Purchase.find()
+            .populate("supplierId")
+            .populate("products.productId");
 
-  } catch (error) {
+        res.status(200).json(purchases);
 
-    res.status(500).json({
-      message: error.message,
-    });
+    } catch (error) {
 
-  }
+        res.status(500).json({
+            message: error.message,
+        });
+
+    }
+
 };
 
-module.exports={
-    createPurchase,
+module.exports = {
+    createPurchase: createPurchaseController,
     getPurchases,
 };

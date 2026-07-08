@@ -39,8 +39,9 @@ async def upload_invoice(file: UploadFile = File(...)):
     try:
 
         invoice = parse_invoice(text)
+        print(invoice)
         invoice = validate_invoice(invoice)
-        
+
         return {
             "message": "Invoice parsed successfully",
             "invoice": invoice

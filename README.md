@@ -275,6 +275,6 @@ GEMINI_API_KEY=your_gemini_api_key
 B.Tech Computer Science | Backend Developer
 
 GitHub: https://github.com/Puranjay10
-LinkedIn: *(Add your LinkedIn URL here)*
+LinkedIn: https://www.linkedin.com/in/puranjay-kapoor-06a3a52ab/
 
 ---

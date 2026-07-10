@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales | VyaaparBill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body data-require-auth data-app-layout>
+  <main class="content">
+    <section class="content-header">
+      <div>
+        <h1 class="page-title">Sales</h1>
+        <p class="page-subtitle">Create customer sales, reduce inventory, and generate invoices.</p>
+      </div>
+      <button class="btn btn-primary" type="button" data-add-sale>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Create Sale</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Sales List</h2>
+        <span class="badge" data-sale-count>0 Sales</span>
+      </div>
+
+      <div class="card-body">
+        <div class="content-toolbar">
+          <label class="search">
+            <span class="sr-only">Search sales</span>
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input class="search-input" type="search" placeholder="Search by customer or product" data-sale-search>
+          </label>
+
+          <button class="btn btn-secondary" type="button" data-refresh-sales>
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <div class="form-error" data-sales-error role="alert" aria-live="polite"></div>
+
+        <div class="state-panel" data-sales-loading>
+          <div>
+            <div class="spinner" aria-hidden="true"></div>
+            <p class="state-title">Loading sales</p>
+            <p class="state-text">Fetching sales records from VyaaparBill.</p>
+          </div>
+        </div>
+
+        <div class="empty-state hide" data-sales-empty>
+          <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+          <p class="empty-state-title">No sales found</p>
+          <p class="empty-state-text">Create your first sale or adjust the search term to see matching records.</p>
+        </div>
+
+        <div class="table-wrap hide" data-sales-table-wrap>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Total Amount</th>
+                <th>Sale Date</th>
+                <th>Invoice</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody data-sales-table></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <p class="pagination-info" data-sale-pagination-info>Page 1 of 1</p>
+        <div class="pagination">
+          <button class="btn btn-secondary" type="button" data-sale-prev-page>
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            <span>Previous</span>
+          </button>
+          <button class="btn btn-secondary" type="button" data-sale-next-page>
+            <span>Next</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" data-sale-modal>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="sale-modal-title">
+      <form data-sale-form novalidate>
+        <div class="modal-header">
+          <h2 class="card-title" id="sale-modal-title">Create Sale</h2>
+          <button class="icon-btn" type="button" data-close-sale-modal aria-label="Close sale form">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-error" data-sale-form-error role="alert" aria-live="polite"></div>
+
+          <div class="form-grid section-gap">
+            <label class="form-group">
+              <span class="form-label">Customer</span>
+              <select class="form-select" name="customerId" data-sale-field="customerId">
+                <option value="">Select customer</option>
+              </select>
+              <span class="field-error" data-field-error="customerId"></span>
+            </label>
+          </div>
+
+          <div class="section-gap">
+            <div class="space-between">
+              <h3 class="card-title">Products</h3>
+              <button class="btn btn-secondary" type="button" data-add-sale-row>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <span>Add Row</span>
+              </button>
+            </div>
+
+            <div class="form-error section-gap" data-sale-products-error role="alert" aria-live="polite"></div>
+
+            <div class="table-wrap section-gap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Selling Price</th>
+                    <th>Line Total</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody data-sale-products-table></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="space-between section-gap">
+            <p class="pagination-info mb-0">Grand Total</p>
+            <p class="stat-value mb-0" data-sale-total>Rs. 0.00</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-close-sale-modal>Cancel</button>
+          <button class="btn btn-primary" type="submit" data-save-sale>
+            <span class="spinner hide" data-sale-save-spinner aria-hidden="true"></span>
+            <span data-sale-save-text>Create Sale</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-sale-detail-modal>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="sale-detail-title">
+      <div class="modal-header">
+        <h2 class="card-title" id="sale-detail-title">Sale Details</h2>
+        <button class="icon-btn" type="button" data-close-sale-detail-modal aria-label="Close sale details">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body" data-sale-detail-body></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-sale-detail-modal>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-invoice-modal>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="invoice-modal-title">
+      <div class="modal-header">
+        <h2 class="card-title" id="invoice-modal-title">Invoice Generated</h2>
+        <button class="icon-btn" type="button" data-close-invoice-modal aria-label="Close invoice">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body" data-invoice-body></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-invoice-modal>Close</button>
+        <button class="btn btn-secondary" type="button" data-view-invoice>
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          <span>View Invoice</span>
+        </button>
+        <a class="btn btn-primary" href="#" target="_blank" rel="noopener" data-download-invoice>
+          <i class="fa-solid fa-download" aria-hidden="true"></i>
+          <span>Download PDF</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/sales.js"></script>
+</body>
+</html>

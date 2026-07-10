@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suppliers | VyaaparBill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body data-require-auth data-app-layout>
+  <main class="content">
+    <section class="content-header">
+      <div>
+        <h1 class="page-title">Suppliers</h1>
+        <p class="page-subtitle">Manage vendor records, GST details, contact information, and addresses.</p>
+      </div>
+      <button class="btn btn-primary" type="button" data-add-supplier>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add Supplier</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Supplier List</h2>
+        <span class="badge" data-supplier-count>0 Suppliers</span>
+      </div>
+
+      <div class="card-body">
+        <div class="content-toolbar">
+          <label class="search">
+            <span class="sr-only">Search suppliers</span>
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input class="search-input" type="search" placeholder="Search by name, email, phone, or GST" data-supplier-search>
+          </label>
+
+          <button class="btn btn-secondary" type="button" data-refresh-suppliers>
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <div class="form-error" data-suppliers-error role="alert" aria-live="polite"></div>
+
+        <div class="state-panel" data-suppliers-loading>
+          <div>
+            <div class="spinner" aria-hidden="true"></div>
+            <p class="state-title">Loading suppliers</p>
+            <p class="state-text">Fetching supplier records from VyaaparBill.</p>
+          </div>
+        </div>
+
+        <div class="empty-state hide" data-suppliers-empty>
+          <i class="fa-regular fa-address-book" aria-hidden="true"></i>
+          <p class="empty-state-title">No suppliers found</p>
+          <p class="empty-state-text">Add your first supplier or adjust the search term to see matching vendor records.</p>
+        </div>
+
+        <div class="table-wrap hide" data-suppliers-table-wrap>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>GST Number</th>
+                <th>Address</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody data-suppliers-table></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <p class="pagination-info" data-supplier-pagination-info>Page 1 of 1</p>
+        <div class="pagination">
+          <button class="btn btn-secondary" type="button" data-supplier-prev-page>
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            <span>Previous</span>
+          </button>
+          <button class="btn btn-secondary" type="button" data-supplier-next-page>
+            <span>Next</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" data-supplier-modal>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
+      <form data-supplier-form novalidate>
+        <div class="modal-header">
+          <h2 class="card-title" id="supplier-modal-title" data-supplier-modal-title>Add Supplier</h2>
+          <button class="icon-btn" type="button" data-close-supplier-modal aria-label="Close supplier form">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-error" data-supplier-form-error role="alert" aria-live="polite"></div>
+          <div class="form-grid section-gap">
+            <label class="form-group">
+              <span class="form-label">Name</span>
+              <input class="form-input" type="text" name="name" data-supplier-field="name">
+              <span class="field-error" data-field-error="name"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Email</span>
+              <input class="form-input" type="email" name="email" data-supplier-field="email">
+              <span class="field-error" data-field-error="email"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Phone</span>
+              <input class="form-input" type="text" name="phone" data-supplier-field="phone">
+              <span class="field-error" data-field-error="phone"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">GST Number</span>
+              <input class="form-input" type="text" name="gstNumber" data-supplier-field="gstNumber">
+              <span class="field-error" data-field-error="gstNumber"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Address</span>
+              <textarea class="form-textarea" name="address" data-supplier-field="address"></textarea>
+              <span class="field-error" data-field-error="address"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-close-supplier-modal>Cancel</button>
+          <button class="btn btn-primary" type="submit" data-save-supplier>
+            <span class="spinner hide" data-supplier-save-spinner aria-hidden="true"></span>
+            <span data-supplier-save-text>Save Supplier</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-delete-supplier-modal>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-supplier-modal-title">
+      <div class="modal-header">
+        <h2 class="card-title" id="delete-supplier-modal-title">Delete Supplier</h2>
+        <button class="icon-btn" type="button" data-close-delete-supplier-modal aria-label="Close delete confirmation">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="mt-0">Are you sure you want to delete <strong data-delete-supplier-name>this supplier</strong>?</p>
+        <p class="text-secondary mb-0">This action cannot be undone.</p>
+        <div class="form-error section-gap" data-delete-supplier-error role="alert" aria-live="polite"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-delete-supplier-modal>Cancel</button>
+        <button class="btn btn-danger" type="button" data-confirm-delete-supplier>
+          <span class="spinner hide" data-delete-supplier-spinner aria-hidden="true"></span>
+          <span data-delete-supplier-text>Delete Supplier</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/suppliers.js"></script>
+</body>
+</html>

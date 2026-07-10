@@ -28,6 +28,17 @@ const confirmPurchase = async (invoice) => {
 
     }
 
+    const Purchase = require("../models/Purchase");
+
+const existingPurchase = await Purchase.findOne({
+    supplierId: supplier._id,
+    invoiceNumber: invoice.invoiceNumber,
+});
+
+if (existingPurchase) {
+    throw new Error("This invoice has already been imported.");
+}
+
     // Prepare purchase products
     const purchaseProducts = [];
 
@@ -86,6 +97,8 @@ const confirmPurchase = async (invoice) => {
     const purchaseData = {
 
         supplierId: supplier._id,
+
+        invoiceNumber: invoice.invoiceNumber,
 
         products: purchaseProducts,
 

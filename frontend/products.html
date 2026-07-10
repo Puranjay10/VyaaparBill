@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products | VyaaparBill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body data-require-auth data-app-layout>
+  <main class="content">
+    <section class="content-header">
+      <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-subtitle">Manage product inventory, pricing, GST, and supplier references.</p>
+      </div>
+      <button class="btn btn-primary" type="button" data-add-product>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add Product</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Product List</h2>
+        <span class="badge" data-product-count>0 Products</span>
+      </div>
+
+      <div class="card-body">
+        <div class="content-toolbar">
+          <label class="search">
+            <span class="sr-only">Search products</span>
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input class="search-input" type="search" placeholder="Search by product name" data-product-search>
+          </label>
+
+          <button class="btn btn-secondary" type="button" data-refresh-products>
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        <div class="form-error" data-products-error role="alert" aria-live="polite"></div>
+
+        <div class="state-panel" data-products-loading>
+          <div>
+            <div class="spinner" aria-hidden="true"></div>
+            <p class="state-title">Loading products</p>
+            <p class="state-text">Fetching inventory from VyaaparBill.</p>
+          </div>
+        </div>
+
+        <div class="empty-state hide" data-products-empty>
+          <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+          <p class="empty-state-title">No products found</p>
+          <p class="empty-state-text">Add your first product or adjust the search term to see matching inventory.</p>
+        </div>
+
+        <div class="table-wrap hide" data-products-table-wrap>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Product Code</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Purchase Price</th>
+                <th>Selling Price</th>
+                <th>GST</th>
+                <th>Supplier</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody data-products-table></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <p class="pagination-info" data-pagination-info>Page 1 of 1</p>
+        <div class="pagination">
+          <button class="btn btn-secondary" type="button" data-prev-page>
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            <span>Previous</span>
+          </button>
+          <button class="btn btn-secondary" type="button" data-next-page>
+            <span>Next</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" data-product-modal>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <form data-product-form novalidate>
+        <div class="modal-header">
+          <h2 class="card-title" id="product-modal-title" data-product-modal-title>Add Product</h2>
+          <button class="icon-btn" type="button" data-close-product-modal aria-label="Close product form">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-error" data-product-form-error role="alert" aria-live="polite"></div>
+          <div class="form-grid section-gap">
+            <label class="form-group">
+              <span class="form-label">Product Name</span>
+              <input class="form-input" type="text" name="name" data-product-field="name">
+              <span class="field-error" data-field-error="name"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Product Code</span>
+              <input class="form-input" type="text" name="productCode" data-product-field="productCode">
+              <span class="field-error" data-field-error="productCode"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Category</span>
+              <input class="form-input" type="text" name="category" data-product-field="category">
+              <span class="field-error" data-field-error="category"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Quantity</span>
+              <input class="form-input" type="number" min="0" step="1" name="quantity" data-product-field="quantity">
+              <span class="field-error" data-field-error="quantity"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Purchase Price</span>
+              <input class="form-input" type="number" min="0" step="0.01" name="purchasePrice" data-product-field="purchasePrice">
+              <span class="field-error" data-field-error="purchasePrice"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Selling Price</span>
+              <input class="form-input" type="number" min="0" step="0.01" name="sellingPrice" data-product-field="sellingPrice">
+              <span class="field-error" data-field-error="sellingPrice"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">GST</span>
+              <input class="form-input" type="number" min="0" step="0.01" name="gstRate" data-product-field="gstRate">
+              <span class="field-error" data-field-error="gstRate"></span>
+            </label>
+
+            <label class="form-group">
+              <span class="form-label">Supplier</span>
+              <input class="form-input" type="text" name="supplier" data-product-field="supplier">
+              <span class="field-error" data-field-error="supplier"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-close-product-modal>Cancel</button>
+          <button class="btn btn-primary" type="submit" data-save-product>
+            <span class="spinner hide" data-product-save-spinner aria-hidden="true"></span>
+            <span data-product-save-text>Save Product</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-delete-modal>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      <div class="modal-header">
+        <h2 class="card-title" id="delete-modal-title">Delete Product</h2>
+        <button class="icon-btn" type="button" data-close-delete-modal aria-label="Close delete confirmation">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="mt-0">Are you sure you want to delete <strong data-delete-product-name>this product</strong>?</p>
+        <p class="text-secondary mb-0">This action cannot be undone.</p>
+        <div class="form-error section-gap" data-delete-error role="alert" aria-live="polite"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-close-delete-modal>Cancel</button>
+        <button class="btn btn-danger" type="button" data-confirm-delete>
+          <span class="spinner hide" data-delete-spinner aria-hidden="true"></span>
+          <span data-delete-text>Delete Product</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/products.js"></script>
+</body>
+</html>

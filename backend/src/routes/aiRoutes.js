@@ -9,17 +9,18 @@ const {
     confirmPurchaseController,
 } = require("../controllers/aiController");
 
-// const protect = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 router.post(
     "/process-invoice",
-    // protect,
+    protect,
     upload.single("file"),
     processInvoiceController
 );
 
 router.post(
     "/confirm-purchase",
+    protect,
     confirmPurchaseController
 );
 

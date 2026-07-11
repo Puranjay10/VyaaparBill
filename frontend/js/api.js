@@ -220,12 +220,57 @@ const SaleApi = {
 };
 
 const InvoiceApi = {
+  list() {
+    return apiRequest("/invoices");
+  },
+
   getById(id) {
     return apiRequest(`/invoices/${id}`);
   },
 
-  getDownloadUrl(id) {
-    return `${API_BASE_URL}/invoices/${id}/download`;
+  async download(id) {
+    const token = getApiToken();
+
+    let response;
+
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/invoices/${id}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      throw new ApiClientError(
+        "Server unavailable. Please check that the backend is running."
+      );
+    }
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.replace("login.html");
+
+      throw new ApiClientError(
+        "Session expired. Please sign in again.",
+        {
+          status: response.status,
+        }
+      );
+    }
+
+    if (!response.ok) {
+      throw new ApiClientError(
+        "Unable to download invoice.",
+        {
+          status: response.status,
+        }
+      );
+    }
+
+    return response.blob();
   },
 };
 

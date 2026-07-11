@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const customerSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -10,8 +16,7 @@ const customerSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      unique: true,
-      sparse: true,
+      trim: true,
     },
 
     phone: {
@@ -31,6 +36,16 @@ const customerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+customerSchema.index(
+  { user: 1, email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      email: { $type: "string" },
+    },
   }
 );
 

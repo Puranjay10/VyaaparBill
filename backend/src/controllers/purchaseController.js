@@ -4,9 +4,10 @@ const Purchase = require("../models/Purchase");
 const createPurchaseController = async (req, res) => {
 
     try {
-
-        const purchase = await createPurchase(req.body);
-
+        const purchase = await createPurchase(
+        req.body,
+        req.user.userId
+        );
         res.status(201).json(purchase);
 
     } catch (error) {
@@ -23,9 +24,11 @@ const getPurchases = async (req, res) => {
 
     try {
 
-        const purchases = await Purchase.find()
-            .populate("supplierId")
-            .populate("products.productId");
+        const purchases = await Purchase.find({
+        user: req.user.userId,
+        })            
+        .populate("supplierId")
+        .populate("products.productId");
 
         res.status(200).json(purchases);
 

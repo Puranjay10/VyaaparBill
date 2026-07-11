@@ -14,9 +14,10 @@ const processInvoiceController = async (req, res) => {
 
         const result = await processInvoice(req.file.path);
 
-        const preview = await generatePurchasePreview(
-            result.invoice
-        );
+       const preview = await generatePurchasePreview(
+  result.invoice,
+  req.user.userId
+);
 
         res.status(200).json({
             message: "Purchase preview generated successfully",
@@ -40,8 +41,10 @@ const confirmPurchaseController = async (req, res) => {
 
     try {
 
-        const purchase = await confirmPurchase(req.body.invoice);
-
+const purchase = await confirmPurchase(
+  req.body.invoice,
+  req.user.userId
+);
         res.status(201).json({
 
             message: "Purchase created successfully",

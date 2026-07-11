@@ -14,7 +14,10 @@ const createProduct=async(req,res)=>{
             supplier,
         }=req.body;
 
-        const existingProduct=await Product.findOne({productCode});
+        const existingProduct = await Product.findOne({
+          user: req.user.userId,
+          productCode,
+        });
 
         if(existingProduct){
             return res.status(400).json({
@@ -23,6 +26,7 @@ const createProduct=async(req,res)=>{
         }
 
         const product = await Product.create({
+            user: req.user.userId,
             name,
             productCode,
             category,
@@ -55,12 +59,16 @@ const getProducts = async (req, res) => {
 
     const sortField=req.query.sort || "createdAt";
 
-    const products = await Product.find()
+    const products = await Product.find({
+      user: req.user.userId,
+    })
     .sort(sortField)
     .skip(skip)
     .limit(limit);
 
-    const totalProducts=await Product.countDocuments();
+    const totalProducts = await Product.countDocuments({
+      user: req.user.userId,
+    });
 
     res.status(200).json({
       totalProducts,
@@ -84,10 +92,10 @@ const getProducts = async (req, res) => {
 //Get product by id 
 const getProductById=async(req,res)=>{
     try{
-        const product=await Product.findById(
-            req.params.id
-        );
-
+        const product = await Product.findOne({
+          _id: req.params.id,
+          user: req.user.userId,
+        });
         if(!product){
             return res.status(404).json({
                 message:"Product not found",
@@ -97,41 +105,59 @@ const getProductById=async(req,res)=>{
     }
     catch(error){
         res.status(500).json({
-            msesage:error.message,
+            message: error.message,
         });
     }
 };
 
 
 //Update Product
-const updateProduct=async (req,res)=>{
-    try{
-        const product= await Product.findById(
-            req.params.id
-        );
+const updateProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      productCode,
+      category,
+      quantity,
+      purchasePrice,
+      sellingPrice,
+      gstRate,
+      supplier,
+    } = req.body;
 
-        if(!product){
-            return res.staus(404).json({
-                message:"Product not found",
-            });
-        }
+    const updatedProduct = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user.userId,
+      },
+      {
+        name,
+        productCode,
+        category,
+        quantity,
+        purchasePrice,
+        sellingPrice,
+        gstRate,
+        supplier,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-        const updatedProduct=
-        await Product.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new:true,
-            }
-        );
-        res.status(200).json(updatedProduct); 
+    if (!updatedProduct) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
     }
 
-    catch(error){
-        res.status(500).json({
-            message:error.message,
-        });
-    }
+    res.status(200).json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 
@@ -139,19 +165,16 @@ const updateProduct=async (req,res)=>{
 const deleteProduct = async (req, res) => {
   try {
 
-    const product = await Product.findById(
-      req.params.id
-    );
+        const product = await Product.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
 
     if (!product) {
       return res.status(404).json({
         message: "Product not found",
       });
     }
-
-    await Product.findByIdAndDelete(
-      req.params.id
-    );
 
     res.status(200).json({
       message: "Product deleted successfully",
@@ -173,6 +196,7 @@ const searchProducts = async (req, res) => {
     const keyword = req.query.name;
 
     const products = await Product.find({
+      user: req.user.userId,
       name: {
         $regex: keyword,
         $options: "i",

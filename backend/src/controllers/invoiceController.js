@@ -4,7 +4,10 @@ const generateInvoicePDF = require("../invoices/invoiceTemplate");
 
 const getInvoiceById = asyncHandler(async (req, res) => {
 
-    const invoice = await Invoice.findById(req.params.id)
+const invoice = await Invoice.findOne({
+  _id: req.params.id,
+  user: req.user.userId,
+})
         .populate("customerId")
         .populate("saleId");
 
@@ -20,8 +23,10 @@ const getInvoiceById = asyncHandler(async (req, res) => {
 
 const downloadInvoice = asyncHandler(async (req, res) => {
 
-    const invoice = await Invoice.findById(req.params.id)
-        .populate("customerId");
+const invoice = await Invoice.findOne({
+  _id: req.params.id,
+  user: req.user.userId,
+})        .populate("customerId");
 
     if (!invoice) {
 
@@ -35,8 +40,16 @@ const downloadInvoice = asyncHandler(async (req, res) => {
 
 });
 
+const getInvoices = asyncHandler(async (req, res) => {
+  const invoices = await Invoice.find({
+    user: req.user.userId,
+  });
+
+  res.status(200).json(invoices);
+});
 
 module.exports = {
     getInvoiceById,
     downloadInvoice,
+    getInvoices,
 };

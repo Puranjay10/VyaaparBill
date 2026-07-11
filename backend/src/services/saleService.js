@@ -1,29 +1,36 @@
 const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 const Customer = require("../models/Customer");
-const ApiError=require("../utils/ApiError");
-const invoiceService=require("./invoiceService");
+const ApiError = require("../utils/ApiError");
+const invoiceService = require("./invoiceService");
 
-const createSale = async ({
-  customerId,
-  products,
-  totalAmount,
-}) => {
-
+const createSale = async (
+  {
+    customerId,
+    products,
+    totalAmount,
+  },
+  userId
+) => {
   // Validate Customer
-  const customer = await Customer.findById(customerId);
+  const customer = await Customer.findOne({
+    _id: customerId,
+    user: userId,
+  });
 
   if (!customer) {
-    throw new ApiError(404,"Customer not found");
+    throw new ApiError(404, "Customer not found");
   }
 
   // Validate Products & Stock
   for (const item of products) {
-
-    const product = await Product.findById(item.productId);
+    const product = await Product.findOne({
+      _id: item.productId,
+      user: userId,
+    });
 
     if (!product) {
-      throw new ApiError(404,"Product not found");
+      throw new ApiError(404, "Product not found");
     }
 
     if (product.quantity < item.quantity) {
@@ -36,6 +43,7 @@ const createSale = async ({
 
   // Create Sale
   const sale = await Sale.create({
+    user: userId,
     customerId,
     products,
     totalAmount,
@@ -43,23 +51,28 @@ const createSale = async ({
 
   // Reduce Inventory
   for (const item of products) {
-
-    const product = await Product.findById(item.productId);
-
-    product.quantity -= item.quantity;
-
-    await product.save();
+    await Product.findOneAndUpdate(
+      {
+        _id: item.productId,
+        user: userId,
+      },
+      {
+        $inc: {
+          quantity: -item.quantity,
+        },
+      }
+    );
   }
 
   const invoice = await invoiceService.createInvoice(
-    sale._id
+    sale._id,
+    userId
   );
-  
-  return{
+
+  return {
     sale,
     invoice,
   };
-
 };
 
 module.exports = {

@@ -4,7 +4,10 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const createSale = asyncHandler(async (req, res) => {
 
-const result = await saleService.createSale(req.body);
+const result = await saleService.createSale(
+  req.body,
+  req.user.userId
+);
 
   res.status(201).json({
       message: "Sale created successfully",
@@ -17,8 +20,8 @@ const result = await saleService.createSale(req.body);
 const getSales = async (req, res) => {
   try {
 
-    const sales = await Sale.find()
-      .populate("customerId")
+const sales = await Sale.find()      
+.populate("customerId")
       .populate("products.productId");
 
     res.status(200).json(sales);
@@ -31,10 +34,14 @@ const getSales = async (req, res) => {
 
   }
 };
+
 const getSaleById = async (req, res) => {
   try {
 
-    const sale = await Sale.findById(req.params.id)
+const sale = await Sale.findOne({
+  _id: req.params.id,
+  user: req.user.userId,
+})
       .populate("customerId")
       .populate("products.productId");
 

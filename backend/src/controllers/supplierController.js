@@ -13,6 +13,7 @@ const createSupplier = async (req, res) => {
 
     const existingSupplier =
       await Supplier.findOne({
+        user: req.user.userId,
         gstNumber,
       });
 
@@ -24,6 +25,7 @@ const createSupplier = async (req, res) => {
     }
 
     const supplierData = {
+      user: req.user.userId,
       name,
       email,
       gstNumber,
@@ -52,7 +54,9 @@ const createSupplier = async (req, res) => {
 const getSuppliers = async (req, res) => {
   try {
 
-    const suppliers = await Supplier.find();
+    const suppliers = await Supplier.find({
+      user: req.user.userId,
+    });
 
     res.status(200).json(suppliers);
 
@@ -69,9 +73,10 @@ const getSuppliers = async (req, res) => {
 const getSupplierById = async (req, res) => {
   try {
 
-    const supplier = await Supplier.findById(
-      req.params.id
-    );
+    const supplier = await Supplier.findOne({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
 
     if (!supplier) {
       return res.status(404).json({
@@ -93,15 +98,42 @@ const getSupplierById = async (req, res) => {
 
 const updateSupplier = async (req, res) => {
   try {
+    const {
+      name,
+      email,
+      phone,
+      gstNumber,
+      address,
+    } = req.body;
 
-    const supplier =
-      await Supplier.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        {
-          new: true,
-        }
-      );
+    const updateData = {
+      $set: {
+        name,
+        email,
+        gstNumber,
+        address,
+      },
+    };
+
+    if (typeof phone === "string" && phone.trim()) {
+      updateData.$set.phone = phone;
+    } else {
+      updateData.$unset = {
+        phone: 1,
+      };
+    }
+
+    const supplier = await Supplier.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user.userId,
+      },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!supplier) {
       return res.status(404).json({
@@ -110,13 +142,10 @@ const updateSupplier = async (req, res) => {
     }
 
     res.status(200).json(supplier);
-
   } catch (error) {
-
     res.status(500).json({
       message: error.message,
     });
-
   }
 };
 
@@ -124,10 +153,10 @@ const updateSupplier = async (req, res) => {
 const deleteSupplier = async (req, res) => {
   try {
 
-    const supplier =
-      await Supplier.findByIdAndDelete(
-        req.params.id
-      );
+    const supplier = await Supplier.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
 
     if (!supplier) {
       return res.status(404).json({

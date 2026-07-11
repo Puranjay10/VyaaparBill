@@ -2,6 +2,11 @@ const mongoose=require("mongoose");
 
 const productSchema=new mongoose.Schema(
    {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -11,7 +16,6 @@ const productSchema=new mongoose.Schema(
     productCode: {
       type: String,
       required: true,
-      unique: true,
     },
 
     category: {
@@ -48,6 +52,11 @@ const productSchema=new mongoose.Schema(
   {
     timestamps: true,
   }
+);
+
+productSchema.index(
+  { user: 1, productCode: 1 },
+  { unique: true }
 );
 
 module.exports=mongoose.model("Product",productSchema);

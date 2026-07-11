@@ -3,26 +3,23 @@ const Product = require("../models/Product");
 
 const { createPurchase } = require("./purchaseService");
 
-const confirmPurchase = async (invoice) => {
+const confirmPurchase = async (invoice,userId) => {
 
     // Find or create supplier        
     let supplier = await Supplier.findOne({
+        user: userId,
         gstNumber: invoice.supplier.gstNumber,
     });
 
     if (!supplier) {
 
         const supplierData = {
-
-        name: invoice.supplier.name,
-
-        email: invoice.supplier.email,
-
-        gstNumber: invoice.supplier.gstNumber,
-
-        address: invoice.supplier.address,
-
-    };
+  user: userId,
+  name: invoice.supplier.name,
+  email: invoice.supplier.email,
+  gstNumber: invoice.supplier.gstNumber,
+  address: invoice.supplier.address,
+};
 
         if (
             typeof invoice.supplier.phone === "string" &&
@@ -38,8 +35,9 @@ const confirmPurchase = async (invoice) => {
     const Purchase = require("../models/Purchase");
 
 const existingPurchase = await Purchase.findOne({
-    supplierId: supplier._id,
-    invoiceNumber: invoice.invoiceNumber,
+  user: userId,
+  supplierId: supplier._id,
+  invoiceNumber: invoice.invoiceNumber,
 });
 
 if (existingPurchase) {
@@ -51,31 +49,24 @@ if (existingPurchase) {
 
     for (const item of invoice.products) {
 
-        let product = await Product.findOne({
-            name: item.name,
-        });
+       let product = await Product.findOne({
+  user: userId,
+  name: item.name,
+});
 
         if (!product) {
 
             product = await Product.create({
-
-                name: item.name,
-
-                productCode: `AI-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-
-                category: "Imported",
-
-                quantity: 0,
-
-                purchasePrice: item.purchasePrice,
-
-                sellingPrice: item.purchasePrice,
-
-                gstRate: item.gstRate,
-
-                supplier: supplier.name,
-
-            });
+  user: userId,
+  name: item.name,
+  productCode: `AI-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+  category: "Imported",
+  quantity: 0,
+  purchasePrice: item.purchasePrice,
+  sellingPrice: item.purchasePrice,
+  gstRate: item.gstRate,
+  supplier: supplier.name,
+});
 
         }
 
@@ -114,8 +105,10 @@ if (existingPurchase) {
     };
 
     // Reuse existing Purchase Service
-    const purchase = await createPurchase(purchaseData);
-
+const purchase = await createPurchase(
+  purchaseData,
+  userId
+);
     return purchase;
 
 };

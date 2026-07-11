@@ -2,10 +2,15 @@ const mongoose = require("mongoose");
 
 const invoiceSchema = new mongoose.Schema({
 
+    user: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  required: true,
+},
+
     invoiceNumber: {
         type: String,
         required: true,
-        unique: true,
     },
 
     saleId: {
@@ -53,5 +58,10 @@ const invoiceSchema = new mongoose.Schema({
 }, {
     timestamps: true,
 });
+
+invoiceSchema.index(
+  { user: 1, invoiceNumber: 1 },
+  { unique: true }
+);
 
 module.exports = mongoose.model("Invoice", invoiceSchema);

@@ -1,8 +1,74 @@
 const Customer = require("../models/Customer");
-const asyncHandler=require("../utils/asyncHandler");
+const asyncHandler = require("../utils/asyncHandler");
 
+// Create Customer
 const createCustomer = asyncHandler(async (req, res) => {
+  const {
+    name,
+    email,
+    phone,
+    address,
+  } = req.body;
 
+  const customerData = {
+    user: req.user.userId,
+    name,
+    phone,
+    address,
+  };
+
+  if (typeof email === "string" && email.trim()) {
+    customerData.email = email;
+  }
+
+  const customer = await Customer.create(customerData);
+
+  res.status(201).json(customer);
+});
+
+
+// Get All Customers
+const getCustomers = async (req, res) => {
+  try {
+    const customers = await Customer.find({
+      user: req.user.userId,
+    });
+
+    res.status(200).json(customers);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+// Get Customer By ID
+const getCustomerById = async (req, res) => {
+  try {
+    const customer = await Customer.findOne({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+// Update Customer
+const updateCustomer = async (req, res) => {
+  try {
     const {
       name,
       email,
@@ -10,39 +76,32 @@ const createCustomer = asyncHandler(async (req, res) => {
       address,
     } = req.body;
 
-    const customer =
-      await Customer.create({
+    const updateData = {
+      $set: {
         name,
-        email,
         phone,
         address,
-      });
+      },
+    };
 
-    res.status(201).json(customer);
+    if (typeof email === "string" && email.trim()) {
+      updateData.$set.email = email;
+    } else {
+      updateData.$unset = {
+        email: 1,
+      };
+    }
 
-  });
-
-const getCustomers = async (req, res) => {
-  try {
-
-    const customers = await Customer.find();
-
-    res.status(200).json(customers);
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
-  }
-};
-
-const getCustomerById = async (req, res) => {
-  try {
-
-    const customer = await Customer.findById(
-      req.params.id
+    const customer = await Customer.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user.userId,
+      },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
     if (!customer) {
@@ -52,52 +111,21 @@ const getCustomerById = async (req, res) => {
     }
 
     res.status(200).json(customer);
-
   } catch (error) {
-
     res.status(500).json({
       message: error.message,
     });
-
   }
 };
 
-const updateCustomer = async (req, res) => {
-  try {
 
-    const customer =
-      await Customer.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        {
-          new: true,
-        }
-      );
-
-    if (!customer) {
-      return res.status(404).json({
-        message: "Customer not found",
-      });
-    }
-
-    res.status(200).json(customer);
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
-    });
-
-  }
-};
-
+// Delete Customer
 const deleteCustomer = async (req, res) => {
   try {
-
-    const customer =
-      await Customer.findByIdAndDelete(
-        req.params.id
-      );
+    const customer = await Customer.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
 
     if (!customer) {
       return res.status(404).json({
@@ -106,18 +134,15 @@ const deleteCustomer = async (req, res) => {
     }
 
     res.status(200).json({
-      message:
-        "Customer deleted successfully",
+      message: "Customer deleted successfully",
     });
-
   } catch (error) {
-
     res.status(500).json({
       message: error.message,
     });
-
   }
 };
+
 
 module.exports = {
   createCustomer,

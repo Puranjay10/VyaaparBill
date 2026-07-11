@@ -1,38 +1,61 @@
 const Purchase = require("../models/Purchase");
 const Product = require("../models/Product");
+const Supplier = require("../models/Supplier");
 
-const createPurchase = async (purchaseData) => {
+const createPurchase = async (purchaseData, userId) => {
+  const supplier = await Supplier.findOne({
+    _id: purchaseData.supplierId,
+    user: userId,
+  });
 
-    const purchase = await Purchase.create({
+  if (!supplier) {
+    throw new Error("Supplier not found");
+  }
 
-        supplierId: purchaseData.supplierId,
+    const productIds = [
+    ...new Set(
+        purchaseData.products.map(
+        (item) => item.productId.toString()
+        )
+    ),
+    ];
 
-        invoiceNumber: purchaseData.invoiceNumber,
+  const products = await Product.find({
+    _id: { $in: productIds },
+    user: userId,
+  });
 
-        products: purchaseData.products,
+  if (products.length !== productIds.length) {
+    throw new Error(
+      "One or more products were not found"
+    );
+  }
 
-        totalAmount: purchaseData.totalAmount,
+  const purchase = await Purchase.create({
+    user: userId,
+    supplierId: purchaseData.supplierId,
+    invoiceNumber: purchaseData.invoiceNumber,
+    products: purchaseData.products,
+    totalAmount: purchaseData.totalAmount,
+  });
 
-    });
+  for (const item of purchase.products) {
+    await Product.findOneAndUpdate(
+      {
+        _id: item.productId,
+        user: userId,
+      },
+      {
+        $inc: {
+          quantity: item.quantity,
+        },
+      }
+    );
+  }
 
-    for (const item of purchase.products) {
-
-        const product = await Product.findById(item.productId);
-
-        if (product) {
-
-            product.quantity += item.quantity;
-
-            await product.save();
-
-        }
-
-    }
-
-    return purchase;
-
+  return purchase;
 };
 
 module.exports = {
-    createPurchase,
+  createPurchase,
 };

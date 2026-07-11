@@ -205,12 +205,23 @@ function getInvoiceActions(invoice) {
   if (!invoice?._id) return "-";
 
   return `
-    <button class="icon-btn" type="button" data-open-invoice="${escapeHtml(invoice._id)}" aria-label="View invoice ${escapeHtml(invoice.invoiceNumber)}">
+    <button
+      class="icon-btn"
+      type="button"
+      data-open-invoice="${escapeHtml(invoice._id)}"
+      aria-label="View invoice ${escapeHtml(invoice.invoiceNumber)}"
+    >
       <i class="fa-regular fa-eye" aria-hidden="true"></i>
     </button>
-    <a class="icon-btn" href="${escapeHtml(window.VBApi.InvoiceApi.getDownloadUrl(invoice._id))}" target="_blank" rel="noopener" aria-label="Download invoice ${escapeHtml(invoice.invoiceNumber)}">
+
+    <button
+      class="icon-btn"
+      type="button"
+      data-download-invoice-id="${escapeHtml(invoice._id)}"
+      aria-label="Download invoice ${escapeHtml(invoice.invoiceNumber)}"
+    >
       <i class="fa-solid fa-download" aria-hidden="true"></i>
-    </a>
+    </button>
   `;
 }
 
@@ -266,24 +277,63 @@ function renderSales() {
 }
 
 async function loadSales() {
-  setAlert(saleElements.error, "");
-  showElement(saleElements.loading);
-  hideElement(saleElements.empty);
-  hideElement(saleElements.tableWrap);
-  setLoadingState(true);
+  setSalesLoading(true);
+  clearAlert(saleElements.error);
 
   try {
-    const data = await window.VBApi.SaleApi.list();
-    salesState.sales = normalizeSalesResponse(data);
+    const [
+      sales,
+      customers,
+      productResponse,
+      invoices,
+    ] = await Promise.all([
+      window.VBApi.SaleApi.list(),
+      window.VBApi.CustomerApi.list(),
+      window.VBApi.ProductApi.list({
+        page: 1,
+        limit: 1000,
+      }),
+      window.VBApi.InvoiceApi.list(),
+    ]);
+
+    salesState.sales = Array.isArray(sales)
+      ? sales
+      : [];
+
+    salesState.customers = Array.isArray(customers)
+      ? customers
+      : [];
+
+    salesState.products = Array.isArray(
+      productResponse?.products
+    )
+      ? productResponse.products
+      : [];
+
+    salesState.invoicesBySaleId = {};
+
+    if (Array.isArray(invoices)) {
+      invoices.forEach((invoice) => {
+        const saleId =
+          typeof invoice.saleId === "object"
+            ? invoice.saleId?._id
+            : invoice.saleId;
+
+        if (saleId) {
+          salesState.invoicesBySaleId[saleId] =
+            invoice;
+        }
+      });
+    }
+
     renderSales();
   } catch (error) {
-    salesState.sales = [];
-    salesState.filteredSales = [];
-    salesState.totalPages = 1;
-    setAlert(saleElements.error, error.message || "Unable to load sales.");
+    setAlert(
+      saleElements.error,
+      error.message || "Unable to load sales."
+    );
   } finally {
-    hideElement(saleElements.loading);
-    setLoadingState(false);
+    setSalesLoading(false);
   }
 }
 
@@ -525,7 +575,6 @@ function openInvoiceModal(invoice) {
       </div>
     ` : ""}
   `;
-  saleElements.downloadInvoice.href = window.VBApi.InvoiceApi.getDownloadUrl(invoice._id);
   saleElements.invoiceModal.classList.add("is-visible");
 }
 
@@ -542,6 +591,35 @@ async function viewCurrentInvoice() {
     openInvoiceModal(invoice);
   } catch (error) {
     setAlert(saleElements.error, error.message || "Unable to load invoice.");
+  }
+}
+
+async function downloadInvoice(invoiceId) {
+  if (!invoiceId) return;
+
+  try {
+    const blob = await window.VBApi.InvoiceApi.download(
+      invoiceId
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `invoice-${invoiceId}.pdf`;
+
+    document.body.appendChild(link);
+
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    setAlert(
+      saleElements.error,
+      error.message || "Unable to download invoice."
+    );
   }
 }
 
@@ -656,6 +734,9 @@ function closeSaleDetail() {
 function handleTableClick(event) {
   const viewButton = event.target.closest("[data-view-sale]");
   const invoiceButton = event.target.closest("[data-open-invoice]");
+  const downloadButton = event.target.closest(
+    "[data-download-invoice-id]"
+  );
 
   if (viewButton) {
     const sale = getSaleById(viewButton.dataset.viewSale);
@@ -666,11 +747,22 @@ function handleTableClick(event) {
   }
 
   if (invoiceButton) {
-    const invoice = Object.values(salesState.invoicesBySaleId).find((item) => item._id === invoiceButton.dataset.openInvoice);
+    const invoice = Object.values(
+      salesState.invoicesBySaleId
+    ).find(
+      (item) =>
+        item._id === invoiceButton.dataset.openInvoice
+    );
 
     if (invoice) {
       openInvoiceModal(invoice);
     }
+  }
+
+  if (downloadButton) {
+    downloadInvoice(
+      downloadButton.dataset.downloadInvoiceId
+    );
   }
 }
 
@@ -730,7 +822,16 @@ function bindSaleEvents() {
     renderSaleRows();
   });
   saleElements.viewInvoice?.addEventListener("click", viewCurrentInvoice);
+  saleElements.downloadInvoice?.addEventListener(
+  "click",
+  (event) => {
+    event.preventDefault();
 
+    downloadInvoice(
+      salesState.currentInvoiceId
+    );
+  }
+);
   document.querySelectorAll("[data-close-sale-modal]").forEach((button) => {
     button.addEventListener("click", closeSaleModal);
   });

@@ -23,14 +23,19 @@ const createSupplier = async (req, res) => {
       });
     }
 
+    const supplierData = {
+      name,
+      email,
+      gstNumber,
+      address,
+    };
+
+    if (typeof phone === "string" && phone.trim()) {
+      supplierData.phone = phone;
+    }
+
     const supplier =
-      await Supplier.create({
-        name,
-        email,
-        phone,
-        gstNumber,
-        address,
-      });
+      await Supplier.create(supplierData);
 
     res.status(201).json(supplier);
 

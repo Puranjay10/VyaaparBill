@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body data-require-auth data-app-layout>
   <main class="content">
@@ -21,14 +22,26 @@
         <p class="page-subtitle">A clean operating view for inventory, purchases, sales, and AI invoice import.</p>
       </div>
       <div class="cluster">
-        <button class="btn btn-secondary" type="button">
-          <i class="fa-solid fa-download" aria-hidden="true"></i>
-          <span>Export</span>
+        <button class="btn btn-secondary" type="button" data-refresh-dashboard>
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          <span>Refresh</span>
         </button>
-        <button class="btn btn-primary" type="button">
-          <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          <span>New Entry</span>
-        </button>
+        <a class="btn btn-primary" href="ai-upload.html">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          <span>AI Import</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="card dashboard-error-card hide" data-dashboard-error-card>
+      <div class="card-body">
+        <div class="dashboard-error-content">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <div>
+            <p class="empty-state-title">Some dashboard data could not load</p>
+            <p class="empty-state-text" data-dashboard-error role="alert" aria-live="polite"></p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -37,62 +50,75 @@
         <div class="stat-top">
           <div>
             <p class="stat-label">Total Sales</p>
-            <p class="stat-value">Rs. 0</p>
+            <p class="stat-value" data-dashboard-kpi="sales">₹0.00</p>
           </div>
           <div class="stat-icon">
             <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
           </div>
         </div>
-        <p class="stat-note">Ready for sales API data</p>
+        <p class="stat-note" data-dashboard-note="sales">Loading sales records</p>
       </article>
 
       <article class="card stat-card">
         <div class="stat-top">
           <div>
-            <p class="stat-label">Purchases</p>
-            <p class="stat-value">Rs. 0</p>
+            <p class="stat-label">Total Purchases</p>
+            <p class="stat-value" data-dashboard-kpi="purchases">₹0.00</p>
           </div>
           <div class="stat-icon">
             <i class="fa-solid fa-receipt" aria-hidden="true"></i>
           </div>
         </div>
-        <p class="stat-note">Manual and AI imports</p>
+        <p class="stat-note" data-dashboard-note="purchases">Loading purchase records</p>
       </article>
 
       <article class="card stat-card">
         <div class="stat-top">
           <div>
-            <p class="stat-label">Products</p>
-            <p class="stat-value">0</p>
+            <p class="stat-label">Total Products</p>
+            <p class="stat-value" data-dashboard-kpi="products">0</p>
           </div>
           <div class="stat-icon">
             <i class="fa-solid fa-box" aria-hidden="true"></i>
           </div>
         </div>
-        <p class="stat-note">Inventory overview placeholder</p>
+        <p class="stat-note" data-dashboard-note="products">Loading inventory</p>
       </article>
 
       <article class="card stat-card">
         <div class="stat-top">
           <div>
-            <p class="stat-label">Customers</p>
-            <p class="stat-value">0</p>
+            <p class="stat-label">Total Customers</p>
+            <p class="stat-value" data-dashboard-kpi="customers">0</p>
           </div>
           <div class="stat-icon">
             <i class="fa-solid fa-user-group" aria-hidden="true"></i>
           </div>
         </div>
-        <p class="stat-note">Customer records placeholder</p>
+        <p class="stat-note" data-dashboard-note="customers">Loading customers</p>
       </article>
     </section>
 
     <section class="grid dashboard-grid section-gap">
-      <article class="card">
+      <article class="card dashboard-activity-card">
         <div class="card-header">
           <h2 class="card-title">Recent Activity</h2>
-          <span class="badge badge-success">Skeleton</span>
+          <span class="badge" data-activity-count>Loading</span>
         </div>
-        <div class="table-wrap">
+        <div class="state-panel dashboard-skeleton" data-dashboard-loading>
+          <div class="dashboard-skeleton-stack" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p class="sr-only">Loading dashboard data</p>
+        </div>
+        <div class="empty-state hide" data-activity-empty>
+          <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+          <p class="empty-state-title">No recent activity yet</p>
+          <p class="empty-state-text">Sales and purchases will appear here once records are created.</p>
+        </div>
+        <div class="table-wrap hide" data-activity-table-wrap>
           <table class="table">
             <thead>
               <tr>
@@ -100,38 +126,35 @@
                 <th>Reference</th>
                 <th>Status</th>
                 <th>Amount</th>
+                <th>Date</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Sale</td>
-                <td>INV-YYYY-000001</td>
-                <td><span class="badge badge-success">Paid</span></td>
-                <td>Rs. 0</td>
-              </tr>
-              <tr>
-                <td>Purchase</td>
-                <td>PO-000001</td>
-                <td><span class="badge badge-warning">Draft</span></td>
-                <td>Rs. 0</td>
-              </tr>
-            </tbody>
+            <tbody data-activity-table></tbody>
           </table>
         </div>
       </article>
 
-      <article class="card">
+      <article class="card dashboard-ai-card-shell">
         <div class="card-header">
-          <h2 class="card-title">AI Import Queue</h2>
-          <button class="btn btn-ghost" type="button">
+          <h2 class="card-title">AI Import</h2>
+          <a class="btn btn-ghost" href="purchases.html">
             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-            <span>Open</span>
-          </button>
+            <span>Open Purchases</span>
+          </a>
         </div>
-        <div class="empty-state">
+        <div class="card-body dashboard-skeleton" data-ai-card-loading>
+          <div class="dashboard-skeleton-stack" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p class="sr-only">Loading latest purchase</p>
+        </div>
+        <div class="card-body hide" data-ai-card></div>
+        <div class="empty-state hide" data-ai-empty>
           <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
-          <p class="empty-state-title">No invoice uploads yet</p>
-          <p class="empty-state-text">The upload experience will use this shared layout when AI import is implemented.</p>
+          <p class="empty-state-title">No purchases found</p>
+          <p class="empty-state-text">Import an invoice or create a purchase to see the latest purchase summary.</p>
         </div>
       </article>
     </section>
@@ -141,7 +164,9 @@
 
   <script src="js/layout.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/navigation.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -395,6 +395,19 @@ function debounce(callback, wait = 350) {
   };
 }
 
+function applyInitialSearchFromUrl() {
+  const searchTerm = new URLSearchParams(window.location.search).get("search")?.trim() || "";
+
+  if (!searchTerm) return;
+
+  suppliersState.searchTerm = searchTerm;
+  suppliersState.page = 1;
+
+  if (supplierElements.search) {
+    supplierElements.search.value = searchTerm;
+  }
+}
+
 function bindSupplierEvents() {
   document.querySelector("[data-add-supplier]")?.addEventListener("click", () => openSupplierModal());
   document.querySelector("[data-refresh-suppliers]")?.addEventListener("click", loadSuppliers);
@@ -454,5 +467,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!window.VBAuth?.getToken()) return;
 
   bindSupplierEvents();
+  applyInitialSearchFromUrl();
   loadSuppliers();
 });

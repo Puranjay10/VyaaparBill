@@ -23,9 +23,51 @@ function isObjectId(value) {
   return typeof value === "string" && /^[a-f\d]{24}$/i.test(value);
 }
 
+function cleanDisplayValue(value) {
+  if (typeof value !== "string") return "";
+
+  const trimmed = value.trim();
+
+  return trimmed && !isObjectId(trimmed) ? trimmed : "";
+}
+
+function getUserDisplayName(user) {
+  return cleanDisplayValue(user?.name) ||
+    cleanDisplayValue(user?.fullName) ||
+    cleanDisplayValue(user?.displayName) ||
+    cleanDisplayValue(user?.email) ||
+    "User";
+}
+
+function getUserInitials(user) {
+  const name = cleanDisplayValue(user?.name) ||
+    cleanDisplayValue(user?.fullName) ||
+    cleanDisplayValue(user?.displayName);
+
+  if (name) {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("");
+  }
+
+  return getUserDisplayName(user).charAt(0).toUpperCase() || "U";
+}
+
 function normalizeLoginResponse(data, fallbackUser = {}) {
   const token = data.token || data.jwt || data.accessToken;
-  const user = data.user || data.loggedInUser || data.data?.user || fallbackUser || {};
+  const responseUser = data.user || data.loggedInUser || data.data?.user;
+  const topLevelUser = {
+    name: data.name,
+    fullName: data.fullName,
+    displayName: data.displayName,
+    email: data.email,
+    role: data.role,
+  };
+  const hasTopLevelUser = Object.values(topLevelUser).some(Boolean);
+  const user = responseUser || (hasTopLevelUser ? topLevelUser : fallbackUser) || {};
 
   return {
     token,
@@ -327,16 +369,15 @@ function setupLogoutButtons() {
 
 function hydrateUserMenu() {
   const user = getStoredUser();
-  const displayName = user?.name || user?.email || "User";
-  const username = isObjectId(displayName) ? "User" : displayName;
-  const initial = (user?.name || user?.email || "User").trim().charAt(0).toUpperCase() || "U";
+  const username = getUserDisplayName(user);
+  const initials = getUserInitials(user);
 
   document.querySelectorAll("[data-username]").forEach((element) => {
     element.textContent = username;
   });
 
   document.querySelectorAll("[data-avatar]").forEach((element) => {
-    element.textContent = initial;
+    element.textContent = initials;
   });
 }
 

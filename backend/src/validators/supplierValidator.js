@@ -12,9 +12,9 @@ const supplierValidator = [
         .withMessage("Enter a valid email"),
 
     body("phone")
+        .optional({ checkFalsy: true })
         .trim()
-        .notEmpty()
-        .withMessage("Phone number is required"),
+        .isString(),
 
     body("gstNumber")
         .trim()

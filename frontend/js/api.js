@@ -229,6 +229,27 @@ const InvoiceApi = {
   },
 };
 
+const AiApi = {
+  processInvoice(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiRequest("/ai/process-invoice", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  confirmPurchase(invoice) {
+    return apiRequest("/ai/confirm-purchase", {
+      method: "POST",
+      body: {
+        invoice,
+      },
+    });
+  },
+};
+
 window.VBApi = {
   request: apiRequest,
   buildQuery,
@@ -238,5 +259,6 @@ window.VBApi = {
   PurchaseApi,
   SaleApi,
   InvoiceApi,
+  AiApi,
   ApiClientError,
 };

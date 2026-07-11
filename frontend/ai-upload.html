@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Invoice Import | VyaaparBill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body data-require-auth data-app-layout>
+  <main class="content">
+    <section class="content-header">
+      <div>
+        <h1 class="page-title">AI Invoice Import</h1>
+        <p class="page-subtitle">Upload a supplier PDF invoice, review the AI purchase preview, and confirm inventory updates.</p>
+      </div>
+      <button class="btn btn-secondary" type="button" data-reset-ai>
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        <span>New Import</span>
+      </button>
+    </section>
+
+    <section class="grid ai-hero-grid">
+      <article class="card ai-upload-card" data-ai-step="upload">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Upload Invoice PDF</h2>
+            <p class="ai-card-subtitle">Start with a supplier invoice document.</p>
+          </div>
+          <span class="badge">AI Intake</span>
+        </div>
+        <div class="card-body">
+          <div class="form-error" data-ai-error role="alert" aria-live="polite"></div>
+
+          <label class="ai-drop-zone" data-drop-zone>
+            <input class="sr-only" type="file" accept="application/pdf,.pdf" data-ai-file>
+            <div class="ai-upload-icon">
+                <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="ai-drop-title">Drop your PDF invoice here</p>
+              <p class="ai-drop-text">Click to browse or drag a file into this workspace. PDF only.</p>
+            </div>
+            <div class="ai-file-pill">
+              <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+              <span data-file-name>No file selected</span>
+            </div>
+          </label>
+
+          <div class="space-between section-gap">
+            <p class="pagination-info mb-0">The AI service will extract supplier, invoice, and product details.</p>
+            <button class="btn btn-primary" type="button" data-process-invoice disabled>
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              <span>Process Invoice</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card ai-timeline-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Workflow</h2>
+            <p class="ai-card-subtitle">Document to purchase in four steps.</p>
+          </div>
+          <span class="badge badge-success" data-workflow-status>Ready</span>
+        </div>
+        <div class="card-body">
+          <div class="ai-timeline" data-stage-list>
+            <div class="ai-timeline-step" data-stage="uploading">
+              <div class="ai-timeline-marker"><i class="fa-regular fa-circle" aria-hidden="true"></i></div>
+              <div>
+                <p class="ai-timeline-title">Upload PDF</p>
+                <p class="ai-timeline-text">Securely send invoice to the AI pipeline.</p>
+              </div>
+              <span class="badge">Waiting</span>
+            </div>
+            <div class="ai-timeline-step" data-stage="ocr">
+              <div class="ai-timeline-marker"><i class="fa-regular fa-circle" aria-hidden="true"></i></div>
+              <div>
+                <p class="ai-timeline-title">OCR Extraction</p>
+                <p class="ai-timeline-text">Read text, tables, and invoice fields.</p>
+              </div>
+              <span class="badge">Waiting</span>
+            </div>
+            <div class="ai-timeline-step" data-stage="gemini">
+              <div class="ai-timeline-marker"><i class="fa-regular fa-circle" aria-hidden="true"></i></div>
+              <div>
+                <p class="ai-timeline-title">Gemini Analysis</p>
+                <p class="ai-timeline-text">Understand supplier and line items.</p>
+              </div>
+              <span class="badge">Waiting</span>
+            </div>
+            <div class="ai-timeline-step" data-stage="preview">
+              <div class="ai-timeline-marker"><i class="fa-regular fa-circle" aria-hidden="true"></i></div>
+              <div>
+                <p class="ai-timeline-title">Purchase Preview</p>
+                <p class="ai-timeline-text">Match inventory and prepare confirmation.</p>
+              </div>
+              <span class="badge">Waiting</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card section-gap ai-processing-card hide" data-processing-panel>
+      <div class="card-body">
+        <div class="ai-processing-content">
+          <div class="ai-processing-orbit" aria-hidden="true">
+            <div class="spinner"></div>
+          </div>
+          <div>
+            <p class="state-title" data-processing-title>Uploading PDF</p>
+            <p class="state-text" data-processing-text>Preparing your invoice for AI processing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hide section-gap ai-preview-panel" data-preview-panel>
+      <div class="content-header">
+        <div>
+          <h2 class="page-title">Purchase Preview</h2>
+          <p class="page-subtitle">Review extracted details before creating the purchase and updating inventory.</p>
+        </div>
+        <button class="btn btn-primary" type="button" data-confirm-purchase>
+          <span class="spinner hide" data-confirm-spinner aria-hidden="true"></span>
+          <span data-confirm-text>Confirm Purchase</span>
+        </button>
+      </div>
+
+      <div class="grid ai-preview-grid">
+        <article class="card ai-detail-card">
+          <div class="card-header">
+            <h3 class="card-title">Supplier</h3>
+            <span class="badge" data-supplier-status>Pending</span>
+          </div>
+          <div class="card-body" data-supplier-card></div>
+        </article>
+
+        <article class="card ai-detail-card">
+          <div class="card-header">
+            <h3 class="card-title">Invoice</h3>
+            <span class="badge">AI Extracted</span>
+          </div>
+          <div class="card-body" data-invoice-card></div>
+        </article>
+      </div>
+
+      <article class="card section-gap ai-products-card">
+        <div class="card-header">
+          <h3 class="card-title">Products</h3>
+          <span class="badge" data-product-count>0 Items</span>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Quantity</th>
+                <th>Purchase Price</th>
+                <th>GST</th>
+                <th>Estimated Total</th>
+              </tr>
+            </thead>
+            <tbody data-products-preview></tbody>
+          </table>
+          <div class="empty-state hide" data-products-empty>
+            <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+            <p class="empty-state-title">No products found</p>
+            <p class="empty-state-text">The AI response did not include product line items.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card section-gap ai-summary-card">
+        <div class="card-header">
+          <h3 class="card-title">Summary</h3>
+          <span class="badge badge-success">Ready to Confirm</span>
+        </div>
+        <div class="card-body">
+          <div class="grid stats-grid ai-kpi-grid">
+            <div class="ai-kpi-card">
+              <div class="stat-icon"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i></div>
+              <p class="stat-label">Products</p>
+              <p class="stat-value" data-summary-products>0</p>
+            </div>
+            <div class="ai-kpi-card">
+              <div class="stat-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></div>
+              <p class="stat-label">New Products</p>
+              <p class="stat-value" data-summary-new-products>0</p>
+            </div>
+            <div class="ai-kpi-card">
+              <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i></div>
+              <p class="stat-label">Estimated Total</p>
+              <p class="stat-value" data-summary-total>Rs. 0.00</p>
+            </div>
+            <div class="ai-kpi-card">
+              <div class="stat-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></div>
+              <p class="stat-label">Supplier Action</p>
+              <p class="stat-value" data-summary-supplier>Review</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card section-gap ai-warning-card hide" data-duplicate-panel>
+      <div class="card-body">
+        <div class="ai-result-screen">
+          <div class="ai-result-icon warning">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          </div>
+          <p class="ai-result-title">Invoice Already Imported</p>
+          <p class="ai-result-text">This invoice already exists in VyaaparBill. No duplicate purchase was created.</p>
+          <div class="grid form-preview-grid ai-result-metrics">
+            <div>
+              <p class="stat-label">Invoice Number</p>
+              <p class="stat-value" data-duplicate-invoice-number>-</p>
+            </div>
+            <div>
+              <p class="stat-label">Purchase Reference</p>
+              <p class="stat-value">Existing Import</p>
+            </div>
+            <div>
+              <p class="stat-label">Status</p>
+              <p class="stat-value">Review</p>
+            </div>
+          </div>
+          <div class="cluster section-gap">
+            <a class="btn btn-primary" href="purchases.html">
+              <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+              <span>View Purchases</span>
+            </a>
+            <button class="btn btn-secondary" type="button" data-import-different>
+              <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+              <span>Import Different Invoice</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card section-gap ai-success-card hide" data-success-panel>
+      <div class="card-body">
+        <div class="ai-result-screen">
+          <div class="ai-result-icon success">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          </div>
+          <p class="ai-result-title">Purchase Imported Successfully</p>
+          <p class="ai-result-text">Inventory, supplier, and product records are now synchronized with this invoice.</p>
+          <div class="grid stats-grid ai-success-list">
+            <div><i class="fa-solid fa-check" aria-hidden="true"></i><span>Purchase Created</span></div>
+            <div><i class="fa-solid fa-check" aria-hidden="true"></i><span>Inventory Updated</span></div>
+            <div><i class="fa-solid fa-check" aria-hidden="true"></i><span><strong data-success-products>0</strong> Products Added</span></div>
+            <div><i class="fa-solid fa-check" aria-hidden="true"></i><span>Supplier <strong data-success-supplier>No</strong></span></div>
+          </div>
+          <div class="cluster section-gap">
+            <a class="btn btn-primary btn-large" href="purchases.html">
+              <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+              <span>View Purchases</span>
+            </a>
+            <button class="btn btn-secondary" type="button" data-import-another>
+              <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+              <span>Import Another Invoice</span>
+            </button>
+            </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+
+  <script src="js/layout.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ai.js"></script>
+</body>
+</html>

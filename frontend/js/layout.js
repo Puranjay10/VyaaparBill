@@ -77,11 +77,12 @@ function renderTopbar() {
           <i class="fa-solid fa-bars" aria-hidden="true"></i>
         </button>
 
-        <label class="search">
-          <span class="sr-only">Search</span>
+        <div class="search global-search">
+          <label class="sr-only" for="global-search-input">Search</label>
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input class="search-input" type="search" placeholder="Search invoices, products, customers">
-        </label>
+          <input class="search-input" id="global-search-input" type="search" placeholder="Search invoices, products, customers" autocomplete="off" data-global-search-input>
+          <div class="global-search-dropdown hide" data-global-search-dropdown></div>
+        </div>
       </div>
 
       <div class="topbar-actions">
@@ -133,9 +134,21 @@ function bindLayoutEvents() {
   sidebarOverlay?.addEventListener("click", closeSidebar);
 }
 
+function loadGlobalSearch() {
+  if (!document.body.hasAttribute("data-app-layout") || document.querySelector('script[data-global-search-script]')) {
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = "js/search.js";
+  script.dataset.globalSearchScript = "true";
+  document.body.appendChild(script);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderAppLayout();
   bindLayoutEvents();
+  loadGlobalSearch();
 
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -147,4 +160,5 @@ document.addEventListener("DOMContentLoaded", () => {
 window.VBLayout = {
   renderAppLayout,
   closeSidebar,
+  loadGlobalSearch,
 };

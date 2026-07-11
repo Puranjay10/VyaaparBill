@@ -12,19 +12,26 @@ const confirmPurchase = async (invoice) => {
 
     if (!supplier) {
 
-        supplier = await Supplier.create({
+        const supplierData = {
 
         name: invoice.supplier.name,
 
         email: invoice.supplier.email,
 
-        phone: invoice.supplier.phone,
-
         gstNumber: invoice.supplier.gstNumber,
 
         address: invoice.supplier.address,
 
-    });
+    };
+
+        if (
+            typeof invoice.supplier.phone === "string" &&
+            invoice.supplier.phone.trim()
+        ) {
+            supplierData.phone = invoice.supplier.phone;
+        }
+
+        supplier = await Supplier.create(supplierData);
 
     }
 

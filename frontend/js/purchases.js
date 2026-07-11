@@ -585,6 +585,19 @@ function debounce(callback, wait = 350) {
   };
 }
 
+function applyInitialSearchFromUrl() {
+  const searchTerm = new URLSearchParams(window.location.search).get("search")?.trim() || "";
+
+  if (!searchTerm) return;
+
+  purchasesState.searchTerm = searchTerm;
+  purchasesState.page = 1;
+
+  if (purchaseElements.search) {
+    purchaseElements.search.value = searchTerm;
+  }
+}
+
 function bindPurchaseEvents() {
   document.querySelector("[data-add-purchase]")?.addEventListener("click", openPurchaseModal);
   document.querySelector("[data-refresh-purchases]")?.addEventListener("click", loadPurchases);
@@ -650,5 +663,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!window.VBAuth?.getToken()) return;
 
   bindPurchaseEvents();
+  applyInitialSearchFromUrl();
   loadPurchases();
 });

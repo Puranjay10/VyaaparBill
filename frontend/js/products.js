@@ -441,6 +441,19 @@ function debounce(callback, wait = 350) {
   };
 }
 
+function applyInitialSearchFromUrl() {
+  const searchTerm = new URLSearchParams(window.location.search).get("search")?.trim() || "";
+
+  if (!searchTerm) return;
+
+  productsState.searchTerm = searchTerm;
+  productsState.page = 1;
+
+  if (productElements.search) {
+    productElements.search.value = searchTerm;
+  }
+}
+
 function bindProductEvents() {
   document.querySelector("[data-add-product]")?.addEventListener("click", () => openProductModal());
   document.querySelector("[data-refresh-products]")?.addEventListener("click", loadProducts);
@@ -500,5 +513,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!window.VBAuth?.getToken()) return;
 
   bindProductEvents();
+  applyInitialSearchFromUrl();
   loadProducts();
 });

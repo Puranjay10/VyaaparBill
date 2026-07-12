@@ -1,19 +1,43 @@
 const { body } = require("express-validator");
 
 const saleValidator = [
+  body("customerId")
+    .notEmpty()
+    .withMessage("Customer is required")
+    .isMongoId()
+    .withMessage("Invalid customer ID"),
 
-    body("customerId")
-        .notEmpty()
-        .withMessage("Customer is required"),
+  body("products")
+    .isArray({ min: 1 })
+    .withMessage(
+      "At least one product is required"
+    )
+    .custom((products) => {
+      const productIds = products.map(
+        (item) => item.productId
+      );
 
-    body("products")
-        .isArray({ min: 1 })
-        .withMessage("At least one product is required"),
+      if (
+        new Set(productIds).size !==
+        productIds.length
+      ) {
+        throw new Error(
+          "Duplicate products are not allowed"
+        );
+      }
 
-    body("totalAmount")
-        .isFloat({ min: 0 })
-        .withMessage("Total amount must be positive"),
+      return true;
+    }),
 
+  body("products.*.productId")
+    .isMongoId()
+    .withMessage("Invalid product ID"),
+
+  body("products.*.quantity")
+    .isInt({ min: 1 })
+    .withMessage(
+      "Product quantity must be at least 1"
+    ),
 ];
 
 module.exports = saleValidator;

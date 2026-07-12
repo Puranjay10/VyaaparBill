@@ -1,71 +1,60 @@
-const { processInvoice } = require("../services/aiService");
-const { generatePurchasePreview } = require("../services/previewService");
-const { confirmPurchase } = require("../services/confirmPurchaseService");
+const {
+  processInvoice,
+} = require("../services/aiService");
 
-const processInvoiceController = async (req, res) => {
+const {
+  generatePurchasePreview,
+} = require("../services/previewService");
 
-    try {
+const {
+  confirmPurchase,
+} = require("../services/confirmPurchaseService");
 
-        if (!req.file) {
-            return res.status(400).json({
-                message: "No invoice uploaded",
-            });
-        }
+const asyncHandler = require("../utils/asyncHandler");
+const ApiError = require("../utils/ApiError");
 
-        const result = await processInvoice(req.file.path);
-
-       const preview = await generatePurchasePreview(
-  result.invoice,
-  req.user.userId
-);
-
-        res.status(200).json({
-            message: "Purchase preview generated successfully",
-
-            preview,
-
-            invoice: result.invoice,
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.response?.data || error.message,
-        });
-
+const processInvoiceController = asyncHandler(
+  async (req, res) => {
+    if (!req.file) {
+      throw new ApiError(
+        400,
+        "No invoice uploaded"
+      );
     }
 
-};
+    const result = await processInvoice(
+      req.file.path
+    );
 
-const confirmPurchaseController = async (req, res) => {
+    const preview = await generatePurchasePreview(
+      result.invoice,
+      req.user.userId
+    );
 
-    try {
-
-const purchase = await confirmPurchase(
-  req.body.invoice,
-  req.user.userId
+    res.status(200).json({
+      message:
+        "Purchase preview generated successfully",
+      preview,
+      invoice: result.invoice,
+    });
+  }
 );
-        res.status(201).json({
 
-            message: "Purchase created successfully",
+const confirmPurchaseController = asyncHandler(
+  async (req, res) => {
+    const purchase = await confirmPurchase(
+      req.body.invoice,
+      req.user.userId
+    );
 
-            purchase,
-
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-
-            message: error.message,
-
-        });
-
-    }
-
-};
+    res.status(201).json({
+      message: "Purchase created successfully",
+      purchase,
+    });
+  }
+);
 
 module.exports = {
-    processInvoiceController,
-    confirmPurchaseController,
+  processInvoiceController,
+  confirmPurchaseController,
 };

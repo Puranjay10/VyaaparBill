@@ -10,7 +10,6 @@ const createSale = async (
   {
     customerId,
     products,
-    totalAmount,
   },
   userId
 ) => {
@@ -21,7 +20,6 @@ const createSale = async (
     let invoice;
 
     await session.withTransaction(async () => {
-      // Validate Customer
       const customer = await Customer.findOne({
         _id: customerId,
         user: userId,
@@ -34,22 +32,9 @@ const createSale = async (
         );
       }
 
-      // Create Sale
-      [sale] = await Sale.create(
-        [
-          {
-            user: userId,
-            customerId,
-            products,
-            totalAmount,
-          },
-        ],
-        {
-          session,
-        }
-      );
+      const saleProducts = [];
+      let totalAmount = 0;
 
-      // Atomically validate and reduce inventory
       for (const item of products) {
         const product =
           await Product.findOneAndUpdate(
@@ -77,7 +62,30 @@ const createSale = async (
             "Product not found or insufficient stock"
           );
         }
+
+        saleProducts.push({
+          productId: product._id,
+          quantity: item.quantity,
+          sellingPrice: product.sellingPrice,
+        });
+
+        totalAmount +=
+          item.quantity * product.sellingPrice;
       }
+
+      [sale] = await Sale.create(
+        [
+          {
+            user: userId,
+            customerId,
+            products: saleProducts,
+            totalAmount,
+          },
+        ],
+        {
+          session,
+        }
+      );
 
       invoice =
         await invoiceService.createInvoice(

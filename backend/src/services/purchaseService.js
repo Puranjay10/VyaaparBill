@@ -33,11 +33,22 @@ const executePurchase = async (
     user: userId,
   }).session(session);
 
-  if (products.length !== productIds.length) {
-    throw new Error(
-      "One or more products were not found"
+    if (products.length !== productIds.length) {
+        throw new Error(
+        "One or more products were not found"
+        );
+    }
+
+    let totalAmount = 0;
+
+    for (const item of purchaseData.products) {
+    totalAmount +=
+        item.quantity * item.purchasePrice;
+    }
+
+    totalAmount = Number(
+    totalAmount.toFixed(2)
     );
-  }
 
   const [purchase] = await Purchase.create(
     [

@@ -20,9 +20,11 @@ const result = await saleService.createSale(
 const getSales = async (req, res) => {
   try {
 
-const sales = await Sale.find()      
-.populate("customerId")
-      .populate("products.productId");
+const sales = await Sale.find({
+  user: req.user.userId,
+})
+  .populate("customerId")
+  .populate("products.productId");
 
     res.status(200).json(sales);
 

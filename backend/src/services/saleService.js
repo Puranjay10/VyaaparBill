@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 const Customer = require("../models/Customer");
@@ -12,67 +14,86 @@ const createSale = async (
   },
   userId
 ) => {
-  // Validate Customer
-  const customer = await Customer.findOne({
-    _id: customerId,
-    user: userId,
-  });
+  const session = await mongoose.startSession();
 
-  if (!customer) {
-    throw new ApiError(404, "Customer not found");
-  }
+  try {
+    let sale;
+    let invoice;
 
-  // Validate Products & Stock
-  for (const item of products) {
-    const product = await Product.findOne({
-      _id: item.productId,
-      user: userId,
+    await session.withTransaction(async () => {
+      // Validate Customer
+      const customer = await Customer.findOne({
+        _id: customerId,
+        user: userId,
+      }).session(session);
+
+      if (!customer) {
+        throw new ApiError(
+          404,
+          "Customer not found"
+        );
+      }
+
+      // Create Sale
+      [sale] = await Sale.create(
+        [
+          {
+            user: userId,
+            customerId,
+            products,
+            totalAmount,
+          },
+        ],
+        {
+          session,
+        }
+      );
+
+      // Atomically validate and reduce inventory
+      for (const item of products) {
+        const product =
+          await Product.findOneAndUpdate(
+            {
+              _id: item.productId,
+              user: userId,
+              quantity: {
+                $gte: item.quantity,
+              },
+            },
+            {
+              $inc: {
+                quantity: -item.quantity,
+              },
+            },
+            {
+              new: true,
+              session,
+            }
+          );
+
+        if (!product) {
+          throw new ApiError(
+            400,
+            "Product not found or insufficient stock"
+          );
+        }
+      }
+
+      invoice =
+        await invoiceService.createInvoice(
+          sale._id,
+          userId,
+          session
+        );
     });
 
-    if (!product) {
-      throw new ApiError(404, "Product not found");
-    }
-
-    if (product.quantity < item.quantity) {
-      throw new ApiError(
-        400,
-        `Insufficient stock for ${product.name}`
-      );
-    }
+    return {
+      sale,
+      invoice,
+    };
+  } finally {
+    await session.endSession();
   }
-
-  // Create Sale
-  const sale = await Sale.create({
-    user: userId,
-    customerId,
-    products,
-    totalAmount,
-  });
-
-  // Reduce Inventory
-  for (const item of products) {
-    await Product.findOneAndUpdate(
-      {
-        _id: item.productId,
-        user: userId,
-      },
-      {
-        $inc: {
-          quantity: -item.quantity,
-        },
-      }
-    );
-  }
-
-  const invoice = await invoiceService.createInvoice(
-    sale._id,
-    userId
-  );
-
-  return {
-    sale,
-    invoice,
-  };
 };
 
 module.exports = {

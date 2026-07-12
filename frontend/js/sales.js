@@ -277,38 +277,20 @@ function renderSales() {
 }
 
 async function loadSales() {
-  setSalesLoading(true);
-  clearAlert(saleElements.error);
+  setAlert(saleElements.error, "");
+  showElement(saleElements.loading);
+  hideElement(saleElements.empty);
+  hideElement(saleElements.tableWrap);
+  setLoadingState(true);
 
   try {
-    const [
-      sales,
-      customers,
-      productResponse,
-      invoices,
-    ] = await Promise.all([
+    const [salesData, invoices] = await Promise.all([
       window.VBApi.SaleApi.list(),
-      window.VBApi.CustomerApi.list(),
-      window.VBApi.ProductApi.list({
-        page: 1,
-        limit: 1000,
-      }),
       window.VBApi.InvoiceApi.list(),
     ]);
 
-    salesState.sales = Array.isArray(sales)
-      ? sales
-      : [];
-
-    salesState.customers = Array.isArray(customers)
-      ? customers
-      : [];
-
-    salesState.products = Array.isArray(
-      productResponse?.products
-    )
-      ? productResponse.products
-      : [];
+    salesState.sales =
+      normalizeSalesResponse(salesData);
 
     salesState.invoicesBySaleId = {};
 
@@ -328,12 +310,17 @@ async function loadSales() {
 
     renderSales();
   } catch (error) {
+    salesState.sales = [];
+    salesState.filteredSales = [];
+    salesState.totalPages = 1;
+
     setAlert(
       saleElements.error,
       error.message || "Unable to load sales."
     );
   } finally {
-    setSalesLoading(false);
+    hideElement(saleElements.loading);
+    setLoadingState(false);
   }
 }
 

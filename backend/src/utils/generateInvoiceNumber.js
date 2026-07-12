@@ -1,6 +1,9 @@
 const Counter = require("../models/Counter");
 
-const generateInvoiceNumber = async (userId) => {
+const generateInvoiceNumber = async (
+  userId,
+  session
+) => {
   const counter = await Counter.findOneAndUpdate(
     {
       user: userId,
@@ -14,6 +17,7 @@ const generateInvoiceNumber = async (userId) => {
     {
       new: true,
       upsert: true,
+      session,
     }
   );
 

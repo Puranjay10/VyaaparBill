@@ -5,23 +5,29 @@ const Product = require("../models/Product");
 const generateInvoiceNumber = require("../utils/generateInvoiceNumber");
 const calculateGST = require("../utils/calculateGST");
 
-const createInvoice = async (saleId, userId) => {
+const createInvoice = async (
+  saleId,
+  userId,
+  session
+) => {
   const sale = await Sale.findOne({
     _id: saleId,
     user: userId,
-  });
+  }).session(session);
 
   if (!sale) {
     throw new Error("Sale not found");
   }
 
   const invoiceNumber = await generateInvoiceNumber(
-    userId
+    userId,
+    session
   );
 
   const totals = await calculateGST(
     sale.products,
-    userId
+    userId,
+    session
   );
 
   const items = [];
@@ -30,7 +36,7 @@ const createInvoice = async (saleId, userId) => {
     const product = await Product.findOne({
       _id: item.productId,
       user: userId,
-    });
+    }).session(session);
 
     if (!product) {
       throw new Error("Product not found");
@@ -48,16 +54,23 @@ const createInvoice = async (saleId, userId) => {
     });
   }
 
-  const invoice = await Invoice.create({
-    user: userId,
-    invoiceNumber,
-    saleId: sale._id,
-    customerId: sale.customerId,
-    items,
-    subtotal: totals.subtotal,
-    gstAmount: totals.gstAmount,
-    totalAmount: totals.totalAmount,
-  });
+  const [invoice] = await Invoice.create(
+    [
+      {
+        user: userId,
+        invoiceNumber,
+        saleId: sale._id,
+        customerId: sale.customerId,
+        items,
+        subtotal: totals.subtotal,
+        gstAmount: totals.gstAmount,
+        totalAmount: totals.totalAmount,
+      },
+    ],
+    {
+      session,
+    }
+  );
 
   return invoice;
 };

@@ -1,6 +1,10 @@
 const Product = require("../models/Product");
 
-const calculateGST = async (products, userId) => {
+const calculateGST = async (
+  products,
+  userId,
+  session
+) => {
   let subtotal = 0;
   let gstAmount = 0;
 
@@ -8,7 +12,7 @@ const calculateGST = async (products, userId) => {
     const product = await Product.findOne({
       _id: item.productId,
       user: userId,
-    });
+    }).session(session);
 
     if (!product) {
       throw new Error("Product not found");

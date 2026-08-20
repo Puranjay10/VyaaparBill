@@ -1,7 +1,7 @@
 const AUTH_TOKEN_KEY = "token";
 const AUTH_USER_KEY = "user";
-const LOGIN_URL = "http://localhost:5000/api/auth/login";
-const REGISTER_URL = "http://localhost:5000/api/auth/register";
+const LOGIN_URL = "https://vyaaparbill-backend.onrender.com/api/auth/login";
+const REGISTER_URL = "https://vyaaparbill-backend.onrender.com/api/auth/register";
 
 function getToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY);
